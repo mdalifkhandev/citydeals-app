@@ -14,6 +14,7 @@ interface LocationStoreState {
   isLoading: boolean;
   error: string | null;
   selectedArea: AreaItem | null;
+  matchedArea: AreaItem | null;
   isAutoDetect: boolean;
 
   setLocation: (
@@ -22,6 +23,8 @@ interface LocationStoreState {
     addressDetails?: Location.LocationGeocodedAddress | null
   ) => void;
   setSelectedArea: (area: AreaItem | null) => void;
+  setMatchedArea: (area: AreaItem | null) => void;
+  enableAutoDetect: () => void;
   setIsAutoDetect: (auto: boolean) => void;
   setPermissionStatus: (status: Location.PermissionStatus | "undetermined") => void;
   setHasRequestedPermission: (hasRequested: boolean) => void;
@@ -33,13 +36,14 @@ export const useLocationStore = create<LocationStoreState>()(
   persist(
     (set) => ({
       coords: null,
-      locationName: "Madrid, Spain",
+      locationName: "Current Location",
       addressDetails: null,
       permissionStatus: "undetermined",
       hasRequestedPermission: false,
       isLoading: false,
       error: null,
       selectedArea: null,
+      matchedArea: null,
       isAutoDetect: true,
 
       setLocation: (coords, locationName, addressDetails = null) =>
@@ -57,9 +61,21 @@ export const useLocationStore = create<LocationStoreState>()(
           isAutoDetect: false,
         }),
 
+      setMatchedArea: (matchedArea) =>
+        set({
+          matchedArea,
+        }),
+
+      enableAutoDetect: () =>
+        set({
+          isAutoDetect: true,
+          selectedArea: null,
+        }),
+
       setIsAutoDetect: (isAutoDetect) =>
         set({
           isAutoDetect,
+          selectedArea: isAutoDetect ? null : undefined,
         }),
 
       setPermissionStatus: (permissionStatus) => set({ permissionStatus }),
@@ -77,6 +93,7 @@ export const useLocationStore = create<LocationStoreState>()(
         permissionStatus: state.permissionStatus,
         hasRequestedPermission: state.hasRequestedPermission,
         selectedArea: state.selectedArea,
+        matchedArea: state.matchedArea,
         isAutoDetect: state.isAutoDetect,
       }),
     }

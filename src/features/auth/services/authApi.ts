@@ -5,17 +5,17 @@ import { AuthResponse, User } from "../types";
 export const authApi = {
   login: async (credentials: any): Promise<AuthResponse> => {
     const { data } = await apiClient.post<any>(ENDPOINTS.AUTH.LOGIN, credentials);
-    return data.data;
+    return data?.data || data;
   },
 
   adminLogin: async (credentials: any): Promise<AuthResponse> => {
     const { data } = await apiClient.post<any>(ENDPOINTS.AUTH.ADMIN_LOGIN, credentials);
-    return data.data;
+    return data?.data || data;
   },
 
   register: async (credentials: any): Promise<AuthResponse> => {
     const { data } = await apiClient.post<any>(ENDPOINTS.AUTH.REGISTER, credentials);
-    return data.data;
+    return data?.data || data;
   },
 
   logout: async (): Promise<void> => {
@@ -24,7 +24,7 @@ export const authApi = {
 
   getCurrentUser: async (): Promise<User> => {
     const { data } = await apiClient.get<any>(ENDPOINTS.AUTH.ME);
-    return data.data;
+    return data?.data || data;
   },
 
   forgotPassword: async (email: string): Promise<{ success: boolean; message: string; otp?: string }> => {

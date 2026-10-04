@@ -23,20 +23,20 @@ export default function AreaSelectorModal({
   onClose,
 }: AreaSelectorModalProps) {
   const { data: areas = [], isLoading: isAreasLoading } = useAreas();
-  const { selectedArea, isAutoDetect, setSelectedArea, setIsAutoDetect } =
+  const { selectedArea, isAutoDetect, setSelectedArea, enableAutoDetect } =
     useLocationStore();
 
   const handleUseGPS = async () => {
     onClose();
-    setIsAutoDetect(true);
-    toast.info("Detecting your location...", {
-      description: "Fetching GPS coordinates and matching nearby area",
+    enableAutoDetect();
+    toast.info("Updating location...", {
+      description: "Fetching GPS coordinates from your device",
     });
 
     const res = await locationService.requestAndGetLocation();
     if (res?.locationName) {
       toast.success("Location updated", {
-        description: `Active area: ${res.locationName}`,
+        description: res.locationName,
       });
     }
   };

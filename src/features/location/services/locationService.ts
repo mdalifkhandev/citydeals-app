@@ -59,25 +59,30 @@ export const locationService = {
       // 1. Check existing permission status first
       let { status } = await Location.getForegroundPermissionsAsync();
 
-      // Only prompt user for permission ONCE if undetermined and not requested before
-      if (
-        status === Location.PermissionStatus.UNDETERMINED &&
-        !locationStore.hasRequestedPermission
-      ) {
-        locationStore.setHasRequestedPermission(true);
+      // If not granted, request permission from user
+      if (status !== Location.PermissionStatus.GRANTED) {
         const req = await Location.requestForegroundPermissionsAsync();
         status = req.status;
       }
       locationStore.setPermissionStatus(status);
 
       if (status !== Location.PermissionStatus.GRANTED) {
-        locationStore.setHasRequestedPermission(true);
         locationStore.setError("Location permission was denied");
         return {
           coords: null,
-          locationName: locationStore.locationName || "Madrid, Spain",
+          locationName: locationStore.locationName || "Location Disabled",
           addressDetails: null,
         };
+      }
+
+      // Check if location services (GPS toggle) is enabled on the device
+      try {
+        const servicesEnabled = await Location.hasServicesEnabledAsync();
+        if (!servicesEnabled) {
+          locationStore.setError("Location services are disabled on device");
+        }
+      } catch {
+        // ignore
       }
 
       // 2. Fetch current GPS position (fast with balanced accuracy, with fallback)
@@ -109,21 +114,21 @@ export const locationService = {
         if (addresses && addresses.length > 0) {
           addressDetails = addresses[0];
           locationName = formatLocationName(addressDetails);
+        } else {
+          locationName = `Lat: ${coords.latitude.toFixed(2)}, Lon: ${coords.longitude.toFixed(2)}`;
         }
       } catch (geocodeErr) {
         console.warn("Reverse geocode failed, using coordinates", geocodeErr);
-        locationName = `${coords.latitude.toFixed(2)}, ${coords.longitude.toFixed(2)}`;
+        locationName = `Lat: ${coords.latitude.toFixed(2)}, Lon: ${coords.longitude.toFixed(2)}`;
       }
 
-      // 4. Update local location store
+      // 4. Update local location store with live device coordinates & geocoded name
       locationStore.setLocation(coords, locationName, addressDetails);
 
-      // 5. Auto resolve closest Area from backend
+      // 5. Auto resolve closest backend Area
       try {
         const resolvedArea = await areasApi.resolveArea(coords);
-        if (resolvedArea && useLocationStore.getState().isAutoDetect) {
-          useLocationStore.getState().setSelectedArea(resolvedArea);
-        }
+        useLocationStore.getState().setMatchedArea(resolvedArea);
       } catch (areaErr) {
         console.warn("Failed to resolve nearest area:", areaErr);
       }
@@ -142,7 +147,7 @@ export const locationService = {
       locationStore.setError(err.message || "Failed to get location");
       return {
         coords: null,
-        locationName: locationStore.locationName || "Madrid, Spain",
+        locationName: locationStore.locationName || "Current Location",
         addressDetails: null,
       };
     } finally {

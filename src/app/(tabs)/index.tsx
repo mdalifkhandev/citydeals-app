@@ -20,6 +20,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DealCard, { DealItem } from "../../components/DealCard";
 import EmptyDealsState from "../../components/EmptyDealsState";
 import AreaSelectorModal from "../../components/AreaSelectorModal";
+import DealCardSkeleton from "../../components/DealCardSkeleton";
+import CategoryPillSkeleton from "../../components/CategoryPillSkeleton";
 import { MOCK_DEALS } from "../../config/constants";
 import { AnimatedFlashList as OriginalAnimatedFlashList } from "@shopify/flash-list";
 import { useAuthStore } from "../../features/auth/store/useAuthStore";
@@ -44,7 +46,15 @@ export default function HomeScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isAreaModalVisible, setIsAreaModalVisible] = useState(false);
 
-  const { selectedArea, isAutoDetect, setSelectedArea } = useLocationStore();
+  const { selectedArea, matchedArea, isAutoDetect, setSelectedArea } =
+    useLocationStore(
+      useShallow((state) => ({
+        selectedArea: state.selectedArea,
+        matchedArea: state.matchedArea,
+        isAutoDetect: state.isAutoDetect,
+        setSelectedArea: state.setSelectedArea,
+      }))
+    );
 
   const { user, isLoggedIn } = useAuthStore(
     useShallow((state) => ({
@@ -54,7 +64,7 @@ export default function HomeScreen() {
   );
 
   // Sync fresh user profile & area details from backend
-  useCurrentUser();
+  const { refetch: refetchUser } = useCurrentUser();
 
   // Request & get live device location on app launch + reverse geocode
   const { locationName: gpsLocationName, refreshLocation } = useUserLocation();
@@ -70,7 +80,8 @@ export default function HomeScreen() {
   }, [isLoggedIn, user?.profilePictureUrl, user?.fullName]);
 
   const locationDisplay = useMemo(() => {
-    if (selectedArea) {
+    // 1. If user explicitly picked an area (or "All Areas") from the modal:
+    if (!isAutoDetect && selectedArea) {
       if (selectedArea.slug === "all") {
         return "All Areas";
       }
@@ -79,17 +90,31 @@ export default function HomeScreen() {
       }
       return selectedArea.name;
     }
-    if (gpsLocationName && gpsLocationName.trim().length > 0) {
+
+    // 2. If in GPS auto-detect mode, show the live device GPS location name:
+    if (
+      gpsLocationName &&
+      gpsLocationName.trim().length > 0 &&
+      gpsLocationName !== "Current Location"
+    ) {
       return gpsLocationName;
     }
+
+    // 3. Fallback to matched backend area if available:
+    if (matchedArea?.name) {
+      return matchedArea.name;
+    }
+
+    // 4. Fallback to user saved profile area:
     if (user?.area) {
       if (user.area.name && user.area.city) {
         return `${user.area.name}, ${user.area.city}`;
       }
-      return user.area.name || user.area.city || user.area.state || "Madrid Centro";
+      return user.area.name || user.area.city || user.area.state || "Current Location";
     }
-    return "Madrid Centro";
-  }, [selectedArea, gpsLocationName, user]);
+
+    return gpsLocationName || "Current Location";
+  }, [isAutoDetect, selectedArea, gpsLocationName, matchedArea, user]);
 
   const handleProfilePress = () => {
     if (isLoggedIn) {
@@ -164,8 +189,12 @@ export default function HomeScreen() {
   const activeSearch =
     debouncedSearch.length > 0 ? debouncedSearch : undefined;
 
-  const activeAreaSlug =
-    !selectedArea || selectedArea.slug === "all" ? undefined : selectedArea.slug;
+  const activeAreaSlug = useMemo(() => {
+    if (!isAutoDetect) {
+      return !selectedArea || selectedArea.slug === "all" ? undefined : selectedArea.slug;
+    }
+    return matchedArea?.slug || undefined;
+  }, [isAutoDetect, selectedArea, matchedArea]);
 
   const {
     data: serverCoupons = [],
@@ -194,9 +223,26 @@ export default function HomeScreen() {
     toggleSaveMutation.mutate({ couponId: deal.id, isSaved: !!deal.isFavorite });
   };
 
+  const handleNotificationPress = () => {
+    if (!isLoggedIn) {
+      toast.info("Notifications", {
+        description: "Sign in to receive instant deal alerts in your area.",
+      });
+      return;
+    }
+    toast.info("Notifications Up to Date", {
+      description: `You are tuned in for the latest deals in ${locationDisplay}.`,
+    });
+  };
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await Promise.all([refetchCoupons(), refetchCategories()]);
+    await Promise.all([
+      refetchCoupons(),
+      refetchCategories(),
+      isLoggedIn ? refetchUser() : Promise.resolve(),
+      isAutoDetect ? refreshLocation() : Promise.resolve(),
+    ]);
     setIsRefreshing(false);
   };
 
@@ -268,6 +314,7 @@ export default function HomeScreen() {
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={handleProfilePress}
+              className="relative"
             >
               <Image
                 source={{ uri: avatarUri }}
@@ -275,6 +322,9 @@ export default function HomeScreen() {
                 className="w-11 h-11 rounded-full bg-neutral-200 border border-orange-200"
                 contentFit="cover"
               />
+              {isLoggedIn && (
+                <View className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-[#0f3b5e]" />
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -290,7 +340,7 @@ export default function HomeScreen() {
                   : "Active Area"}
               </Text>
               <View className="flex-row items-center mt-0.5">
-                <Ionicons name="location-sharp" size={16} color="#ffffff" />
+                <Ionicons name="location-sharp" size={16} color="#ea580c" />
                 <Text
                   numberOfLines={1}
                   className="text-white text-base font-bold ml-1 mr-1 flex-1"
@@ -305,9 +355,13 @@ export default function HomeScreen() {
           {/* Notification Bell */}
           <TouchableOpacity
             activeOpacity={0.8}
-            className="w-11 h-11 rounded-2xl bg-white items-center justify-center border border-neutral-100"
+            onPress={handleNotificationPress}
+            className="w-11 h-11 rounded-2xl bg-white items-center justify-center border border-neutral-100 relative"
           >
             <Feather name="bell" size={20} color="#1e293b" />
+            {isLoggedIn && (
+              <View className="absolute top-2.5 right-2.5 w-2.5 h-2.5 rounded-full bg-orange-500 border border-white" />
+            )}
           </TouchableOpacity>
         </View>
 
@@ -378,41 +432,42 @@ export default function HomeScreen() {
               )}
             </View>
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}
-            >
-              {categoryList.map((cat) => {
-                const isSelected = selectedCategorySlug === cat.slug;
-                return (
-                  <Pressable
-                    key={cat.id || cat.slug}
-                    onPress={() => setSelectedCategorySlug(cat.slug)}
-                    className={`px-5 py-2.5 rounded-full border flex-row items-center ${
-                      isSelected
-                        ? "bg-orange-500 border-orange-500"
-                        : "bg-slate-100 border-slate-200"
-                    }`}
-                  >
-                    <Text
-                      className={`font-semibold text-base ${
-                        isSelected ? "text-white" : "text-neutral-700"
+            {isCategoriesLoading && categoryList.length <= 1 ? (
+              <CategoryPillSkeleton count={5} />
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}
+              >
+                {categoryList.map((cat) => {
+                  const isSelected = selectedCategorySlug === cat.slug;
+                  return (
+                    <Pressable
+                      key={cat.id || cat.slug}
+                      onPress={() => setSelectedCategorySlug(cat.slug)}
+                      className={`px-5 py-2.5 rounded-full border flex-row items-center ${
+                        isSelected
+                          ? "bg-orange-500 border-orange-500"
+                          : "bg-slate-100 border-slate-200"
                       }`}
                     >
-                      {cat.name}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
+                      <Text
+                        className={`font-semibold text-base ${
+                          isSelected ? "text-white" : "text-neutral-700"
+                        }`}
+                      >
+                        {cat.name}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            )}
 
             {isCouponsLoading && (
-              <View className="pt-8 pb-4 items-center justify-center">
-                <ActivityIndicator size="large" color="#ea580c" />
-                <Text className="text-neutral-400 text-sm mt-2">
-                  Loading deals...
-                </Text>
+              <View className="mt-4 px-4">
+                <DealCardSkeleton count={2} />
               </View>
             )}
           </View>
@@ -427,14 +482,16 @@ export default function HomeScreen() {
           </View>
         )}
         ListEmptyComponent={
-          <View className="px-4">
-            <EmptyDealsState
-              query={debouncedSearch.length > 0 ? debouncedSearch : undefined}
-              areaName={selectedArea?.slug !== "all" ? selectedArea?.name : undefined}
-              onClearFilters={handleClearFilters}
-              onSwitchArea={() => setIsAreaModalVisible(true)}
-            />
-          </View>
+          !isCouponsLoading ? (
+            <View className="px-4">
+              <EmptyDealsState
+                query={debouncedSearch.length > 0 ? debouncedSearch : undefined}
+                areaName={selectedArea?.slug !== "all" ? selectedArea?.name : undefined}
+                onClearFilters={handleClearFilters}
+                onSwitchArea={() => setIsAreaModalVisible(true)}
+              />
+            </View>
+          ) : null
         }
       />
 
