@@ -25,7 +25,7 @@ export default function CurvedHeader({
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => router.back()}
-            className="w-11 h-11 rounded-2xl bg-white items-center justify-center shadow-sm"
+            className="w-11 h-11 rounded-2xl bg-white items-center justify-center border border-neutral-100"
           >
             <Feather name="arrow-left" size={22} color="#1e293b" />
           </TouchableOpacity>

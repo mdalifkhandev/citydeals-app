@@ -9,5 +9,25 @@ export const ENDPOINTS = {
     FORGOT_PASSWORD: "/auth/forgot-password",
     VERIFY_OTP: "/auth/verify-otp",
     RESET_PASSWORD: "/auth/reset-password",
+    LOCATION_SYNC: "/auth/location/sync",
+  },
+  USERS: {
+    ME: "/me",
+    AVATAR: "/me/avatar",
+  },
+  UPLOAD: {
+    FILE: "/upload",
+    BASE64: "/upload/base64",
+  },
+  COUPONS: {
+    LIST: "/coupons",
+    SAVED: "/coupons/saved",
+  },
+  CATEGORIES: {
+    LIST: "/categories",
+  },
+  AREAS: {
+    LIST: "/areas",
+    RESOLVE: "/areas/resolve",
   },
 };

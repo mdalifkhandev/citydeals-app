@@ -13,9 +13,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DealCard, { DealItem } from "../../components/DealCard";
 import { MOCK_DEALS } from "../../config/constants";
+import { useUserLocation } from "../../features/location/hooks/useUserLocation";
 
 export default function NearbyScreen() {
   const insets = useSafeAreaInsets();
+  const { locationName } = useUserLocation();
   const [selectedRadius, setSelectedRadius] = useState("< 2 km");
   const [nearbyDeals, setNearbyDeals] = useState<DealItem[]>(() => MOCK_DEALS);
 
@@ -63,7 +65,9 @@ export default function NearbyScreen() {
 
           <View style={styles.locationBadge}>
             <Ionicons name="location-sharp" size={15} color="#ea580c" />
-            <Text style={styles.locationBadgeText}>Madrid, ES</Text>
+            <Text style={styles.locationBadgeText} numberOfLines={1}>
+              {locationName || "Madrid, ES"}
+            </Text>
           </View>
         </View>
 

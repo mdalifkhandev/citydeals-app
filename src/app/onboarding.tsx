@@ -14,6 +14,7 @@ import { StatusBar } from "expo-status-bar";
 import { router } from "expo-router";
 import PrimaryButton from "../components/PrimaryButton";
 import { ONBOARDING_DATA, OnboardingSlide } from "../config/constants";
+import { useAuthStore } from "../features/auth/store/useAuthStore";
 
 export default function OnboardingScreen() {
   const { width } = useWindowDimensions();
@@ -35,11 +36,13 @@ export default function OnboardingScreen() {
         animated: true,
       });
     } else {
+      useAuthStore.getState().setOnboardingCompleted(true);
       router.push("/register" as any);
     }
   };
 
   const handleSkip = () => {
+    useAuthStore.getState().setOnboardingCompleted(true);
     router.push("/register" as any);
   };
 

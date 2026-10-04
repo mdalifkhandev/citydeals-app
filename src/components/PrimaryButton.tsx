@@ -31,7 +31,7 @@ export default function PrimaryButton({
       activeOpacity={0.85}
       onPress={onPress}
       disabled={isDisabled}
-      className={`w-full bg-orange-500 active:bg-orange-600 h-13 py-4 rounded-2xl items-center justify-center shadow-lg shadow-orange-500/25 ${
+      className={`w-full bg-orange-500 active:bg-orange-600 h-13 py-4 rounded-2xl items-center justify-center ${
         isDisabled ? "opacity-60" : ""
       } ${className}`}
       {...rest}

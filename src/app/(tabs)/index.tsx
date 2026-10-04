@@ -1,10 +1,13 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useMemo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Animated,
+  Keyboard,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,16 +19,89 @@ import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DealCard, { DealItem } from "../../components/DealCard";
 import EmptyDealsState from "../../components/EmptyDealsState";
-import { CATEGORIES, MOCK_DEALS } from "../../config/constants";
+import AreaSelectorModal from "../../components/AreaSelectorModal";
+import { MOCK_DEALS } from "../../config/constants";
 import { AnimatedFlashList as OriginalAnimatedFlashList } from "@shopify/flash-list";
+import { useAuthStore } from "../../features/auth/store/useAuthStore";
+import { useCurrentUser } from "../../features/auth/hooks/useCurrentUser";
+import { useUserLocation } from "../../features/location/hooks/useUserLocation";
+import { useLocationStore } from "../../features/location/store/useLocationStore";
+import { useCategories } from "../../features/categories";
+import { useCoupons, useToggleSaveCoupon } from "../../features/coupons";
+import { useDebounce } from "../../utils/useDebounce";
+import { useShallow } from "zustand/react/shallow";
+import { toast } from "sonner-native";
 
 // Cast to any to bypass AnimatedProps typing bug with FlashListProps
 const AnimatedFlashList = OriginalAnimatedFlashList as any;
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const router = useRouter();
+  const [selectedCategorySlug, setSelectedCategorySlug] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery.trim(), 350);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isAreaModalVisible, setIsAreaModalVisible] = useState(false);
+
+  const { selectedArea, isAutoDetect, setSelectedArea } = useLocationStore();
+
+  const { user, isLoggedIn } = useAuthStore(
+    useShallow((state) => ({
+      user: state.user,
+      isLoggedIn: state.isAuthenticated,
+    }))
+  );
+
+  // Sync fresh user profile & area details from backend
+  useCurrentUser();
+
+  // Request & get live device location on app launch + reverse geocode
+  const { locationName: gpsLocationName, refreshLocation } = useUserLocation();
+
+  const avatarUri = useMemo(() => {
+    if (isLoggedIn && user?.profilePictureUrl) {
+      return user.profilePictureUrl;
+    }
+    if (isLoggedIn && user?.fullName) {
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=ea580c&color=ffffff&bold=true`;
+    }
+    return "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80";
+  }, [isLoggedIn, user?.profilePictureUrl, user?.fullName]);
+
+  const locationDisplay = useMemo(() => {
+    if (selectedArea) {
+      if (selectedArea.slug === "all") {
+        return "All Areas";
+      }
+      if (selectedArea.city && selectedArea.name !== selectedArea.city) {
+        return `${selectedArea.name}, ${selectedArea.city}`;
+      }
+      return selectedArea.name;
+    }
+    if (gpsLocationName && gpsLocationName.trim().length > 0) {
+      return gpsLocationName;
+    }
+    if (user?.area) {
+      if (user.area.name && user.area.city) {
+        return `${user.area.name}, ${user.area.city}`;
+      }
+      return user.area.name || user.area.city || user.area.state || "Madrid Centro";
+    }
+    return "Madrid Centro";
+  }, [selectedArea, gpsLocationName, user]);
+
+  const handleProfilePress = () => {
+    if (isLoggedIn) {
+      router.push("/(tabs)/profile" as any);
+    } else {
+      router.push("/(auth)/login" as any);
+    }
+  };
+
+  const handleLocationPress = () => {
+    setIsAreaModalVisible(true);
+  };
 
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -56,25 +132,96 @@ export default function HomeScreen() {
     extrapolate: "clamp",
   });
 
-  const filteredDeals = useMemo(() => {
-    let list = MOCK_DEALS;
+  // Fetch live categories from backend
+  const {
+    data: serverCategories = [],
+    isLoading: isCategoriesLoading,
+    refetch: refetchCategories,
+  } = useCategories();
 
-    if (selectedCategory !== "All") {
-      list = list.filter((d) => d.category === selectedCategory);
+  const categoryList = useMemo(() => {
+    const allItem = { id: "all", name: "All", slug: "all" };
+    if (!serverCategories || serverCategories.length === 0) {
+      return [
+        allItem,
+        { id: "restaurants", name: "Restaurants", slug: "restaurants" },
+        { id: "shopping", name: "Shopping", slug: "shopping" },
+        { id: "groceries", name: "Groceries", slug: "groceries" },
+        { id: "electronics", name: "Electronics", slug: "electronics" },
+        { id: "beauty", name: "Beauty", slug: "beauty" },
+        { id: "travel", name: "Travel", slug: "travel" },
+        { id: "fitness", name: "Fitness", slug: "fitness" },
+      ];
     }
+    return [allItem, ...serverCategories];
+  }, [serverCategories]);
 
-    if (searchQuery.trim().length > 0) {
-      const q = searchQuery.toLowerCase().trim();
-      list = list.filter(
-        (deal) =>
-          deal.dealHeading.toLowerCase().includes(q) ||
-          deal.dealDescription.toLowerCase().includes(q) ||
-          (deal.category && deal.category.toLowerCase().includes(q)),
-      );
+  // Fetch live coupons scoped to category from backend
+  // Fetch live coupons scoped to category & debounced search from backend
+  const activeCategorySlug =
+    selectedCategorySlug === "all" ? undefined : selectedCategorySlug;
+
+  const activeSearch =
+    debouncedSearch.length > 0 ? debouncedSearch : undefined;
+
+  const activeAreaSlug =
+    !selectedArea || selectedArea.slug === "all" ? undefined : selectedArea.slug;
+
+  const {
+    data: serverCoupons = [],
+    isLoading: isCouponsLoading,
+    isRefetching: isCouponsRefetching,
+    refetch: refetchCoupons,
+  } = useCoupons({
+    categorySlug: activeCategorySlug,
+    search: activeSearch,
+    areaSlug: activeAreaSlug,
+  });
+
+  const isSearching =
+    searchQuery.trim() !== debouncedSearch ||
+    (isCouponsLoading && debouncedSearch.length > 0);
+
+  const toggleSaveMutation = useToggleSaveCoupon();
+
+  const handleToggleFavorite = (deal: DealItem) => {
+    if (!isLoggedIn) {
+      toast.info("Sign In Required", {
+        description: "Please sign in to save your favorite deals.",
+      });
+      return;
+    }
+    toggleSaveMutation.mutate({ couponId: deal.id, isSaved: !!deal.isFavorite });
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await Promise.all([refetchCoupons(), refetchCategories()]);
+    setIsRefreshing(false);
+  };
+
+  const filteredDeals = useMemo(() => {
+    let list: DealItem[] = [];
+
+    if (serverCoupons && serverCoupons.length > 0) {
+      list = serverCoupons.map((c) => ({
+        id: c.id,
+        category: c.category?.name || "General",
+        dealHeading: c.title,
+        dealDescription: c.description,
+        image: c.imageUrl || require("../../../assets/images/placeholder-deal.jpg"),
+        isFavorite: c.isSaved ?? false,
+      }));
+    } else if (
+      !isCouponsLoading &&
+      selectedCategorySlug === "all" &&
+      debouncedSearch.length === 0
+    ) {
+      list = MOCK_DEALS;
     }
 
     return list;
-  }, [selectedCategory, searchQuery]);
+  }, [serverCoupons, isCouponsLoading, selectedCategorySlug, debouncedSearch]);
 
   const handleOpenDeal = (deal: DealItem) => {
     router.push({
@@ -90,7 +237,13 @@ export default function HomeScreen() {
 
   const handleClearFilters = () => {
     setSearchQuery("");
-    setSelectedCategory("All");
+    setSelectedCategorySlug("all");
+    setSelectedArea({
+      id: "all",
+      name: "All Areas",
+      slug: "all",
+      city: "All Cities",
+    });
   };
 
   return (
@@ -110,35 +263,49 @@ export default function HomeScreen() {
 
         {/* Sticky Profile / Location / Notification Row */}
         <View className="flex-row items-center justify-between z-10">
-          {/* User Location */}
+          {/* User Profile & Location */}
           <View className="flex-row items-center flex-1 mr-3">
-            <Image
-              source={{
-                uri: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
-              }}
-              style={{ width: 44, height: 44, borderRadius: 22 }}
-              className="w-11 h-11 rounded-full bg-neutral-200 border border-orange-200"
-            />
-            <View className="ml-3 flex-1">
-              <Text className="text-slate-300 text-base font-normal">
-                My Location
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={handleProfilePress}
+            >
+              <Image
+                source={{ uri: avatarUri }}
+                style={{ width: 44, height: 44, borderRadius: 22 }}
+                className="w-11 h-11 rounded-full bg-neutral-200 border border-orange-200"
+                contentFit="cover"
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={handleLocationPress}
+              className="ml-3 flex-1"
+            >
+              <Text className="text-slate-300 text-xs font-normal" numberOfLines={1}>
+                {isLoggedIn && user?.fullName
+                  ? `Hi, ${user.fullName.trim().split(" ")[0]}`
+                  : isAutoDetect
+                  ? "Nearby Area (GPS)"
+                  : "Active Area"}
               </Text>
               <View className="flex-row items-center mt-0.5">
                 <Ionicons name="location-sharp" size={16} color="#ffffff" />
                 <Text
                   numberOfLines={1}
-                  className="text-white text-base font-bold ml-1 flex-1"
+                  className="text-white text-base font-bold ml-1 mr-1 flex-1"
                 >
-                  4/A 28013 Madrid, Spain
+                  {locationDisplay}
                 </Text>
+                <Feather name="chevron-down" size={14} color="#94a3b8" />
               </View>
-            </View>
+            </TouchableOpacity>
           </View>
 
           {/* Notification Bell */}
           <TouchableOpacity
             activeOpacity={0.8}
-            className="w-11 h-11 rounded-2xl bg-white items-center justify-center shadow-sm"
+            className="w-11 h-11 rounded-2xl bg-white items-center justify-center border border-neutral-100"
           >
             <Feather name="bell" size={20} color="#1e293b" />
           </TouchableOpacity>
@@ -154,7 +321,7 @@ export default function HomeScreen() {
             overflow: "hidden",
           }}
         >
-          <View className="bg-white rounded-2xl px-4 h-[52px] flex-row items-center z-10 shadow-sm border border-neutral-100/80">
+          <View className="bg-white rounded-2xl px-4 h-[52px] flex-row items-center z-10 border border-neutral-100/80">
             <Feather name="search" size={20} color="#ea580c" />
             <TextInput
               value={searchQuery}
@@ -162,9 +329,12 @@ export default function HomeScreen() {
               placeholder="Search deals, stores, food..."
               placeholderTextColor="#9ca3af"
               returnKeyType="search"
+              onSubmitEditing={Keyboard.dismiss}
               className="flex-1 ml-2.5 text-neutral-900 font-medium text-base py-2.5"
             />
-            {searchQuery.trim().length > 0 && (
+            {isSearching ? (
+              <ActivityIndicator size="small" color="#ea580c" className="ml-1" />
+            ) : searchQuery.trim().length > 0 ? (
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => setSearchQuery("")}
@@ -172,7 +342,7 @@ export default function HomeScreen() {
               >
                 <Feather name="x" size={16} color="#64748b" />
               </TouchableOpacity>
-            )}
+            ) : null}
           </View>
         </Animated.View>
       </View>
@@ -184,6 +354,14 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing || isCouponsRefetching}
+            onRefresh={handleRefresh}
+            colors={["#ea580c"]}
+            tintColor="#ea580c"
+          />
+        }
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: false },
@@ -191,22 +369,27 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingTop: 16, paddingBottom: 110 }}
         ListHeaderComponent={
           <View className="mb-4">
-            <Text className="text-neutral-900 font-bold text-lg px-5 mb-3">
-              Browse Categories
-            </Text>
+            <View className="flex-row items-center justify-between px-5 mb-3">
+              <Text className="text-neutral-900 font-bold text-lg">
+                Browse Categories
+              </Text>
+              {isCategoriesLoading && (
+                <ActivityIndicator size="small" color="#ea580c" />
+              )}
+            </View>
 
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}
             >
-              {CATEGORIES.map((category) => {
-                const isSelected = selectedCategory === category;
+              {categoryList.map((cat) => {
+                const isSelected = selectedCategorySlug === cat.slug;
                 return (
                   <Pressable
-                    key={category}
-                    onPress={() => setSelectedCategory(category)}
-                    className={`px-5 py-2.5 rounded-full border ${
+                    key={cat.id || cat.slug}
+                    onPress={() => setSelectedCategorySlug(cat.slug)}
+                    className={`px-5 py-2.5 rounded-full border flex-row items-center ${
                       isSelected
                         ? "bg-orange-500 border-orange-500"
                         : "bg-slate-100 border-slate-200"
@@ -217,12 +400,21 @@ export default function HomeScreen() {
                         isSelected ? "text-white" : "text-neutral-700"
                       }`}
                     >
-                      {category}
+                      {cat.name}
                     </Text>
                   </Pressable>
                 );
               })}
             </ScrollView>
+
+            {isCouponsLoading && (
+              <View className="pt-8 pb-4 items-center justify-center">
+                <ActivityIndicator size="large" color="#ea580c" />
+                <Text className="text-neutral-400 text-sm mt-2">
+                  Loading deals...
+                </Text>
+              </View>
+            )}
           </View>
         }
         renderItem={({ item }: { item: DealItem }) => (
@@ -230,17 +422,25 @@ export default function HomeScreen() {
             <DealCard
               deal={item}
               onPressOpen={handleOpenDeal}
+              onToggleFavorite={handleToggleFavorite}
             />
           </View>
         )}
         ListEmptyComponent={
           <View className="px-4">
             <EmptyDealsState
-              query={searchQuery}
+              query={debouncedSearch.length > 0 ? debouncedSearch : undefined}
+              areaName={selectedArea?.slug !== "all" ? selectedArea?.name : undefined}
               onClearFilters={handleClearFilters}
+              onSwitchArea={() => setIsAreaModalVisible(true)}
             />
           </View>
         }
+      />
+
+      <AreaSelectorModal
+        isVisible={isAreaModalVisible}
+        onClose={() => setIsAreaModalVisible(false)}
       />
     </View>
   );

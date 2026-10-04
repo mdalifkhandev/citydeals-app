@@ -50,7 +50,7 @@ export default function HelpSupportScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Main Form Card */}
-          <View className="bg-white rounded-3xl p-5 mx-4 mt-6 shadow-sm border border-neutral-100">
+          <View className="bg-white rounded-3xl p-5 mx-4 mt-6 border border-neutral-100">
             <Text className="text-neutral-900 font-bold text-lg mb-1">
               Contact Support
             </Text>

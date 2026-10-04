@@ -8,7 +8,10 @@
     "scheme": "citydeals",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Allow CityDeals to access your location to show local deals near you."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +21,11 @@
         "monochromeImage": "./assets/images/icon.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.CityDeals"
+      "package": "com.anonymous.CityDeals",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -38,7 +45,13 @@
       "expo-sharing",
       "expo-asset",
       "expo-image",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow CityDeals to access your location to show local deals near you."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

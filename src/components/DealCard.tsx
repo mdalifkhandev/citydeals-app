@@ -43,14 +43,14 @@ export default function DealCard({
       : deal.image || require("../../assets/images/placeholder-deal.jpg");
 
   return (
-    <View className="bg-white rounded-[26px] p-4 mb-5 border border-neutral-100 shadow-sm">
+    <View className="bg-white rounded-[26px] p-4 mb-5 border border-neutral-100">
       {/* Banner Container */}
       <View className="rounded-2xl overflow-hidden bg-neutral-100 relative">
         {/* Favorite Heart Button */}
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={handleFavoriteToggle}
-          className="absolute top-3 right-3 w-10 h-10 rounded-2xl bg-white items-center justify-center z-20 shadow-md"
+          className="absolute top-3 right-3 w-10 h-10 rounded-2xl bg-white items-center justify-center z-20 border border-neutral-100"
         >
           <Ionicons
             name={favorite ? "heart" : "heart-outline"}

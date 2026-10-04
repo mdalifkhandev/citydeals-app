@@ -192,7 +192,7 @@ export default function CouponDetailsScreen() {
               router.replace("/(tabs)" as any);
             }
           }}
-          className="w-11 h-11 rounded-2xl bg-white items-center justify-center z-10 shadow-sm"
+          className="w-11 h-11 rounded-2xl bg-white items-center justify-center z-10 border border-neutral-100"
         >
           <Feather name="arrow-left" size={20} color="#1e293b" />
         </TouchableOpacity>
@@ -202,7 +202,7 @@ export default function CouponDetailsScreen() {
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={handleShareDeal}
-          className="w-11 h-11 rounded-2xl bg-white items-center justify-center z-10 shadow-sm"
+          className="w-11 h-11 rounded-2xl bg-white items-center justify-center z-10 border border-neutral-100"
         >
           <Ionicons name="share-social-outline" size={20} color="#1e293b" />
         </TouchableOpacity>
@@ -218,9 +218,9 @@ export default function CouponDetailsScreen() {
       >
         {/* Smart App Download Banner for Shared Link Visitors */}
         {!isLoggedIn && (
-          <View className="mx-4 mt-4 bg-orange-50/90 border border-orange-200 rounded-3xl p-4 flex-row items-center justify-between shadow-sm">
+          <View className="mx-4 mt-4 bg-orange-50/90 border border-orange-200 rounded-3xl p-4 flex-row items-center justify-between">
             <View className="flex-row items-center flex-1 mr-3">
-              <View className="w-11 h-11 rounded-2xl bg-orange-500 items-center justify-center mr-3 shadow-sm">
+              <View className="w-11 h-11 rounded-2xl bg-orange-500 items-center justify-center mr-3">
                 <Ionicons name="sparkles" size={20} color="#ffffff" />
               </View>
               <View className="flex-1">
@@ -235,7 +235,7 @@ export default function CouponDetailsScreen() {
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={handleDownloadApp}
-              className="bg-neutral-900 px-3.5 py-2.5 rounded-xl active:bg-neutral-800 shadow-sm"
+              className="bg-neutral-900 px-3.5 py-2.5 rounded-xl active:bg-neutral-800"
             >
               <Text className="text-white font-bold text-sm">Get App</Text>
             </TouchableOpacity>
@@ -276,7 +276,7 @@ export default function CouponDetailsScreen() {
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={handleRedeemCoupon}
-            className="flex-row items-center justify-center gap-2.5 rounded-2xl py-4 mb-3 bg-orange-500 shadow-md shadow-orange-500/25"
+            className="flex-row items-center justify-center gap-2.5 rounded-2xl py-4 mb-3 bg-orange-500"
           >
             <Ionicons name="ticket" size={22} color="#ffffff" />
             <Text className="text-white text-lg font-bold">Redeem Coupon</Text>
@@ -293,7 +293,7 @@ export default function CouponDetailsScreen() {
               isSaved
                 ? "bg-orange-50 border-orange-200"
                 : "bg-[#111827] border-neutral-900"
-            } shadow-sm`}
+            }`}
           >
             <Ionicons
               name={isSaved ? "heart" : "heart-outline"}
@@ -327,7 +327,7 @@ export default function CouponDetailsScreen() {
             </View>
             <TouchableOpacity
               activeOpacity={0.85}
-              className="flex-row items-center gap-1.5 rounded-2xl px-3.5 py-3 bg-[#111827] shadow-sm"
+              className="flex-row items-center gap-1.5 rounded-2xl px-3.5 py-3 bg-[#111827]"
             >
               <Ionicons name="location-outline" size={16} color="#ffffff" />
               <Text className="text-white text-base font-semibold">
@@ -344,7 +344,7 @@ export default function CouponDetailsScreen() {
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleOpenWebsite}
-              className="flex-1 flex-row items-center justify-center gap-2 rounded-2xl py-4 bg-[#111827] shadow-sm"
+              className="flex-1 flex-row items-center justify-center gap-2 rounded-2xl py-4 bg-[#111827]"
             >
               <Ionicons name="globe-outline" size={18} color="#ffffff" />
               <Text className="text-white text-base font-semibold">Website</Text>
@@ -352,7 +352,7 @@ export default function CouponDetailsScreen() {
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleShareEmail}
-              className="flex-1 flex-row items-center justify-center gap-2 rounded-2xl py-4 bg-[#111827] shadow-sm"
+              className="flex-1 flex-row items-center justify-center gap-2 rounded-2xl py-4 bg-[#111827]"
             >
               <Ionicons name="mail-outline" size={18} color="#ffffff" />
               <Text className="text-white text-base font-semibold">Email</Text>
@@ -365,7 +365,7 @@ export default function CouponDetailsScreen() {
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleShareFacebook}
-              className="flex-1 items-center justify-center rounded-2xl py-4 bg-[#111827] shadow-sm"
+              className="flex-1 items-center justify-center rounded-2xl py-4 bg-[#111827]"
             >
               <FontAwesome name="facebook" size={22} color="#ffffff" />
             </TouchableOpacity>
@@ -374,7 +374,7 @@ export default function CouponDetailsScreen() {
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleShareInstagram}
-              className="flex-1 items-center justify-center rounded-2xl py-4 bg-[#111827] shadow-sm"
+              className="flex-1 items-center justify-center rounded-2xl py-4 bg-[#111827]"
             >
               <FontAwesome name="instagram" size={22} color="#ffffff" />
             </TouchableOpacity>
@@ -383,7 +383,7 @@ export default function CouponDetailsScreen() {
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleShareTikTok}
-              className="flex-1 items-center justify-center rounded-2xl py-4 bg-[#111827] shadow-sm"
+              className="flex-1 items-center justify-center rounded-2xl py-4 bg-[#111827]"
             >
               <FontAwesome6 name="tiktok" size={20} color="#ffffff" />
             </TouchableOpacity>
@@ -392,7 +392,7 @@ export default function CouponDetailsScreen() {
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleShareSMS}
-              className="flex-1 items-center justify-center rounded-2xl py-4 bg-[#111827] shadow-sm"
+              className="flex-1 items-center justify-center rounded-2xl py-4 bg-[#111827]"
             >
               <Ionicons
                 name="chatbubble-ellipses-outline"
@@ -412,7 +412,7 @@ export default function CouponDetailsScreen() {
         onRequestClose={() => setIsAuthPromptVisible(false)}
       >
         <View className="flex-1 bg-black/60 items-center justify-center px-5">
-          <View className="w-full max-w-sm bg-white rounded-3xl p-6 items-center shadow-2xl">
+          <View className="w-full max-w-sm bg-white rounded-3xl p-6 items-center">
             <View className="w-16 h-16 rounded-full bg-orange-100 items-center justify-center mb-4 border border-orange-200">
               <Ionicons name="lock-closed" size={28} color="#ea580c" />
             </View>
@@ -432,7 +432,7 @@ export default function CouponDetailsScreen() {
                   setIsAuthPromptVisible(false);
                   router.push("/(auth)/login" as any);
                 }}
-                className="w-full bg-orange-500 rounded-2xl py-3.5 items-center justify-center shadow-md shadow-orange-500/25"
+                className="w-full bg-orange-500 rounded-2xl py-3.5 items-center justify-center"
               >
                 <Text className="text-white font-bold text-lg">Log In</Text>
               </TouchableOpacity>
@@ -505,7 +505,7 @@ export default function CouponDetailsScreen() {
 
             {/* QR Code Container */}
             <View className="w-full bg-neutral-50 rounded-3xl p-5 items-center border border-neutral-200 mt-5">
-              <View className="bg-white p-4 rounded-2xl border border-neutral-200/80 shadow-sm items-center justify-center mb-4">
+              <View className="bg-white p-4 rounded-2xl border border-neutral-200/80 items-center justify-center mb-4">
                 <Ionicons name="qr-code" size={160} color="#0f172a" />
               </View>
 
@@ -513,7 +513,7 @@ export default function CouponDetailsScreen() {
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={handleCopyCouponCode}
-                className="flex-row items-center bg-white border border-orange-200 px-5 py-2.5 rounded-full shadow-sm"
+                className="flex-row items-center bg-white border border-orange-200 px-5 py-2.5 rounded-full"
               >
                 <Text className="text-orange-600 font-extrabold text-lg tracking-wider mr-2">
                   {couponCode}
@@ -534,7 +534,7 @@ export default function CouponDetailsScreen() {
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={() => setIsRedeemModalVisible(false)}
-              className="w-full bg-neutral-900 rounded-2xl py-4 items-center justify-center mt-6 shadow-sm"
+              className="w-full bg-neutral-900 rounded-2xl py-4 items-center justify-center mt-6"
             >
               <Text className="text-white font-bold text-lg">Done</Text>
             </TouchableOpacity>

@@ -13,12 +13,20 @@ import { StatusBar } from "expo-status-bar";
 import { Feather } from "@expo/vector-icons";
 import CurvedHeader from "../../components/CurvedHeader";
 import PrimaryButton from "../../components/PrimaryButton";
+import { useAuthStore } from "../../features/auth/store/useAuthStore";
 
 export default function AccountSettingScreen() {
-  const [fullName, setFullName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [email, setEmail] = useState("");
+  const user = useAuthStore((state) => state.user);
+  const [fullName, setFullName] = useState(user?.fullName || "");
+  const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || "");
+  const [email, setEmail] = useState(user?.email || "");
   const [dateOfBirth, setDateOfBirth] = useState("");
+
+  const avatarUri =
+    user?.profilePictureUrl ||
+    (user?.fullName
+      ? `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=ea580c&color=ffffff&bold=true`
+      : "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80");
 
   const handleSaveChange = () => {
     alert("Account settings saved successfully!");
@@ -44,14 +52,12 @@ export default function AccountSettingScreen() {
           <View className="items-center mt-6">
             <View className="relative">
               <Image
-                source={{
-                  uri: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
-                }}
+                source={{ uri: avatarUri }}
                 className="w-24 h-24 rounded-full bg-neutral-200 border-2 border-orange-100"
               />
               <TouchableOpacity
                 activeOpacity={0.8}
-                className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-white border border-neutral-200 items-center justify-center shadow-sm"
+                className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-white border border-neutral-200 items-center justify-center"
               >
                 <Feather name="camera" size={16} color="#1e293b" />
               </TouchableOpacity>
@@ -65,7 +71,7 @@ export default function AccountSettingScreen() {
           </View>
 
           {/* Personal Information Card */}
-          <View className="bg-white rounded-3xl p-5 mx-4 mt-6 shadow-sm border border-neutral-100">
+          <View className="bg-white rounded-3xl p-5 mx-4 mt-6 border border-neutral-100">
             <Text className="text-neutral-900 font-bold text-lg mb-4">
               Personal Information
             </Text>

@@ -15,7 +15,7 @@ export default function TermsOfUseScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 50 }}
       >
-        <View className="bg-white rounded-3xl p-5 mx-4 mt-6 shadow-sm border border-neutral-100">
+        <View className="bg-white rounded-3xl p-5 mx-4 mt-6 border border-neutral-100">
           {/* Last Updated Badge */}
           <View className="self-start bg-orange-50 border border-orange-200/60 px-3.5 py-1.5 rounded-full mb-4">
             <Text className="text-orange-600 font-bold text-base">

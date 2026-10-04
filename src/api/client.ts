@@ -34,8 +34,12 @@ const processQueue = (error: any, token: string | null = null) => {
 };
 
 apiClient.interceptors.request.use(
-  (config) => {
-    const token = tokenService.getAccessToken();
+  async (config) => {
+    let token = tokenService.getAccessToken();
+    if (!token) {
+      await tokenService.loadTokens();
+      token = tokenService.getAccessToken();
+    }
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -68,39 +72,62 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      const refreshToken = tokenService.getRefreshToken();
+      let refreshToken = tokenService.getRefreshToken();
+      if (!refreshToken) {
+        refreshToken = await tokenService.getRefreshTokenAsync();
+      }
+
+      const isAuthenticated = useAuthStore.getState().isAuthenticated;
       
       if (!refreshToken) {
-        useAuthStore.getState().clearSession();
-        if (typeof require !== 'undefined') {
-          const { router } = require('expo-router');
-          router.replace('/(auth)/login');
+        if (isAuthenticated) {
+          useAuthStore.getState().clearSession();
+          if (typeof require !== 'undefined') {
+            const { router } = require('expo-router');
+            router.replace('/(auth)/login');
+          }
         }
+        isRefreshing = false;
         return Promise.reject(error);
       }
 
       try {
-        const { data } = await axios.post<{ tokens: AuthTokens }>(
+        const response = await axios.post<any>(
           `${BASE_URL}${ENDPOINTS.AUTH.REFRESH}`,
           { refreshToken }
         );
 
-        await tokenService.saveTokens(data.tokens);
-        apiClient.defaults.headers.common.Authorization = `Bearer ${data.tokens.accessToken}`;
+        const newTokens: AuthTokens =
+          response.data?.data?.tokens || response.data?.tokens;
+
+        if (!newTokens?.accessToken) {
+          throw new Error("Invalid token refresh payload from server");
+        }
+
+        await tokenService.saveTokens(newTokens);
+
+        const freshUser = response.data?.data?.user || response.data?.user;
+        if (freshUser) {
+          useAuthStore.getState().updateUser(freshUser);
+        }
+
+        apiClient.defaults.headers.common.Authorization = `Bearer ${newTokens.accessToken}`;
         
-        processQueue(null, data.tokens.accessToken);
+        processQueue(null, newTokens.accessToken);
         
         if (originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${data.tokens.accessToken}`;
+          originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
         }
         
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        useAuthStore.getState().clearSession();
-        if (typeof require !== 'undefined') {
-          const { router } = require('expo-router');
-          router.replace('/(auth)/login');
+        if (isAuthenticated) {
+          useAuthStore.getState().clearSession();
+          if (typeof require !== 'undefined') {
+            const { router } = require('expo-router');
+            router.replace('/(auth)/login');
+          }
         }
         return Promise.reject(refreshError);
       } finally {

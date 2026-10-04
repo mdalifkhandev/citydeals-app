@@ -32,7 +32,7 @@ export default function AppBottomSheet({
 
         {/* Bottom Sheet Container */}
         <TouchableWithoutFeedback>
-          <View className="bg-white rounded-t-[32px] px-6 pt-3 pb-10 shadow-2xl border-t border-neutral-100">
+          <View className="bg-white rounded-t-[32px] px-6 pt-3 pb-10 border-t border-neutral-100">
             {/* Grabber indicator */}
             {showDragIndicator && (
               <View className="w-12 h-1.5 rounded-full bg-neutral-200 self-center mb-4" />

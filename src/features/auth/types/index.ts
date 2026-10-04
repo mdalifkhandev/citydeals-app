@@ -1,6 +1,17 @@
 export type Role = "ADMIN" | "ADVERTISER" | "USER";
 export type UserStatus = "ACTIVE" | "SUSPENDED" | "BANNED";
 
+export interface Area {
+  id: string;
+  name: string;
+  slug: string;
+  city: string;
+  state: string;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
+  radiusMeters?: number;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -9,6 +20,11 @@ export interface User {
   profilePictureUrl: string | null;
   role: Role;
   status: UserStatus;
+  areaId?: string | null;
+  area?: Area | null;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
+  address?: string | null;
 }
 
 export interface AuthTokens {

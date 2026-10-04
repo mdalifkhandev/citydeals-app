@@ -5,6 +5,8 @@ import { tokenService } from "../services/tokenService";
 import { useAuthStore } from "../store/useAuthStore";
 import { handleApiError } from "../../../utils/errorHandler";
 import { toast } from "sonner-native";
+import { locationService } from "../../location/services/locationService";
+import { useLocationStore } from "../../location/store/useLocationStore";
 
 export const useAuthMutations = () => {
   const queryClient = useQueryClient();
@@ -14,6 +16,13 @@ export const useAuthMutations = () => {
   const handleSuccess = async (data: any, redirectPath?: string) => {
     await tokenService.saveTokens(data.tokens);
     setSession(data.user);
+    useAuthStore.getState().setOnboardingCompleted(true);
+
+    const coords = useLocationStore.getState().coords;
+    if (coords) {
+      locationService.syncLocationWithBackend(coords).catch(() => {});
+    }
+
     if (redirectPath) {
       router.replace(redirectPath as any);
     }

@@ -1,5 +1,5 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
@@ -17,6 +17,7 @@ import { useAuthMutations } from "../../features/auth/hooks/useAuthMutations";
 import { useShallow } from "zustand/react/shallow";
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { isLoggedIn, user } = useAuthStore(
     useShallow((state) => ({
       isLoggedIn: state.isAuthenticated,
@@ -38,6 +39,13 @@ export default function ProfileScreen() {
     router.push("/login" as any);
   };
 
+  const avatarUri =
+    isLoggedIn && user?.profilePictureUrl
+      ? user.profilePictureUrl
+      : isLoggedIn && user?.fullName
+      ? `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=ea580c&color=ffffff&bold=true`
+      : "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80";
+
   return (
     <View className="flex-1 bg-neutral-50">
       <StatusBar style="light" />
@@ -50,14 +58,13 @@ export default function ProfileScreen() {
         contentContainerStyle={{ paddingBottom: 160 }}
       >
         {/* User Card */}
-        <View className="bg-white rounded-3xl p-5 mx-4 mt-4 shadow-sm border border-neutral-100">
+        <View className="bg-white rounded-3xl p-5 mx-4 mt-4 border border-neutral-100">
           {/* User Info Row */}
           <View className="flex-row items-center mb-5">
             <Image
-              source={{
-                uri: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
-              }}
+              source={{ uri: avatarUri }}
               className="w-14 h-14 rounded-full bg-neutral-200 border-2 border-orange-100"
+              contentFit="cover"
             />
             <View className="ml-3.5 flex-1">
               <Text className="text-neutral-500 text-base font-normal">
@@ -140,7 +147,7 @@ export default function ProfileScreen() {
                 router.push("/screens/account" as any);
               }
             }}
-            className="bg-white border border-neutral-100 rounded-2xl px-4 h-[60px] flex-row items-center justify-between shadow-sm"
+            className="bg-white border border-neutral-100 rounded-2xl px-4 h-[60px] flex-row items-center justify-between"
           >
             <View className="flex-row items-center flex-1">
               <Feather name="user" size={20} color="#ea580c" />
@@ -161,7 +168,7 @@ export default function ProfileScreen() {
                 router.push("/screens/change-password" as any);
               }
             }}
-            className="bg-white border border-neutral-100 rounded-2xl px-4 h-[60px] flex-row items-center justify-between shadow-sm"
+            className="bg-white border border-neutral-100 rounded-2xl px-4 h-[60px] flex-row items-center justify-between"
           >
             <View className="flex-row items-center flex-1">
               <Feather name="lock" size={20} color="#ea580c" />
@@ -173,7 +180,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
 
           {/* Push notification */}
-          <View className="bg-white border border-neutral-100 rounded-2xl px-4 h-[60px] flex-row items-center justify-between shadow-sm">
+          <View className="bg-white border border-neutral-100 rounded-2xl px-4 h-[60px] flex-row items-center justify-between">
             <View className="flex-row items-center flex-1">
               <Feather name="bell" size={20} color="#ea580c" />
               <Text className="text-neutral-800 font-semibold text-lg ml-3.5">
@@ -192,7 +199,7 @@ export default function ProfileScreen() {
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => setIsLanguageSheetOpen(true)}
-            className="bg-white border border-neutral-100 rounded-2xl px-4 h-[60px] flex-row items-center justify-between shadow-sm"
+            className="bg-white border border-neutral-100 rounded-2xl px-4 h-[60px] flex-row items-center justify-between"
           >
             <View className="flex-row items-center flex-1">
               <MaterialCommunityIcons
@@ -216,7 +223,7 @@ export default function ProfileScreen() {
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => router.push("/screens/help-support" as any)}
-            className="bg-white border border-neutral-100 rounded-2xl px-4 h-[60px] flex-row items-center justify-between shadow-sm"
+            className="bg-white border border-neutral-100 rounded-2xl px-4 h-[60px] flex-row items-center justify-between"
           >
             <View className="flex-row items-center flex-1">
               <Feather name="shield" size={20} color="#ea580c" />
@@ -231,7 +238,7 @@ export default function ProfileScreen() {
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => router.push("/screens/terms-of-use" as any)}
-            className="bg-white border border-neutral-100 rounded-2xl px-4 h-[60px] flex-row items-center justify-between shadow-sm"
+            className="bg-white border border-neutral-100 rounded-2xl px-4 h-[60px] flex-row items-center justify-between"
           >
             <View className="flex-row items-center flex-1">
               <Feather name="file-text" size={20} color="#ea580c" />
@@ -257,7 +264,7 @@ export default function ProfileScreen() {
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={handleGoToAuth}
-            className="bg-orange-500 rounded-2xl py-4 flex-row items-center justify-center mx-4 mt-5 shadow-md shadow-orange-500/25"
+            className="bg-orange-500 rounded-2xl py-4 flex-row items-center justify-center mx-4 mt-5"
           >
             <Feather name="log-in" size={20} color="#ffffff" />
             <Text className="text-white font-bold text-lg ml-2">
