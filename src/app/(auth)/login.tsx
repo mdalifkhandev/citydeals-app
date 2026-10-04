@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { toast } from "sonner-native";
 import PrimaryButton from "../../components/PrimaryButton";
 import { useAuthMutations } from "../../features/auth/hooks/useAuthMutations";
 
@@ -22,10 +23,45 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [emailError, setEmailError] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
 
   const handleLogin = () => {
-    if (!email || !password) return;
-    loginMutation.mutate({ email, password });
+    const trimmedEmail = email.trim();
+    let hasError = false;
+
+    if (!trimmedEmail) {
+      setEmailError(true);
+      hasError = true;
+    } else {
+      setEmailError(false);
+    }
+
+    if (!password) {
+      setPasswordError(true);
+      hasError = true;
+    } else {
+      setPasswordError(false);
+    }
+
+    if (hasError) {
+      if (!trimmedEmail && !password) {
+        toast.error("Fields Required", {
+          description: "Please fill in both email and password.",
+        });
+      } else if (!trimmedEmail) {
+        toast.error("Email Required", {
+          description: "Please enter your email address.",
+        });
+      } else {
+        toast.error("Password Required", {
+          description: "Please enter your password.",
+        });
+      }
+      return;
+    }
+
+    loginMutation.mutate({ email: trimmedEmail, password });
   };
 
   const handleGoogleSignIn = () => {
@@ -64,7 +100,7 @@ export default function LoginScreen() {
 
           {/* Heading */}
           <View className="items-center mb-4">
-            <Text className="text-lg font-bold text-neutral-900 tracking-tight">
+            <Text className="text-lg font-bold text-neutral-900 tracking-tight" numberOfLines={1}>
               Welcome Back
             </Text>
             <Text className="text-neutral-500 text-base text-center mt-1 max-w-xs">
@@ -79,11 +115,24 @@ export default function LoginScreen() {
               <Text className="text-neutral-700 text-base font-semibold mb-1">
                 Email Address
               </Text>
-              <View className="flex-row items-center border border-neutral-200 rounded-xl px-3.5 h-12 bg-white focus:border-orange-500">
-                <Feather name="mail" size={18} color="#ea580c" />
+              <View
+                className={`flex-row items-center border rounded-xl px-3.5 h-12 bg-white ${
+                  emailError
+                    ? "border-red-500 bg-red-50/20"
+                    : "border-neutral-200 focus:border-orange-500"
+                }`}
+              >
+                <Feather
+                  name="mail"
+                  size={18}
+                  color={emailError ? "#ef4444" : "#ea580c"}
+                />
                 <TextInput
                   value={email}
-                  onChangeText={setEmail}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    if (emailError) setEmailError(false);
+                  }}
                   placeholder="Enter your email address"
                   placeholderTextColor="#9ca3af"
                   keyboardType="email-address"
@@ -91,6 +140,11 @@ export default function LoginScreen() {
                   className="flex-1 ml-2.5 text-neutral-900 text-base py-0"
                 />
               </View>
+              {emailError && (
+                <Text className="text-red-500 text-xs mt-1 ml-1 font-medium">
+                  Email address is required
+                </Text>
+              )}
             </View>
 
             {/* Password */}
@@ -98,11 +152,24 @@ export default function LoginScreen() {
               <Text className="text-neutral-700 text-base font-semibold mb-1">
                 Password
               </Text>
-              <View className="flex-row items-center border border-neutral-200 rounded-xl px-3.5 h-12 bg-white focus:border-orange-500">
-                <Feather name="lock" size={18} color="#ea580c" />
+              <View
+                className={`flex-row items-center border rounded-xl px-3.5 h-12 bg-white ${
+                  passwordError
+                    ? "border-red-500 bg-red-50/20"
+                    : "border-neutral-200 focus:border-orange-500"
+                }`}
+              >
+                <Feather
+                  name="lock"
+                  size={18}
+                  color={passwordError ? "#ef4444" : "#ea580c"}
+                />
                 <TextInput
                   value={password}
-                  onChangeText={setPassword}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    if (passwordError) setPasswordError(false);
+                  }}
                   placeholder="Enter your password"
                   placeholderTextColor="#9ca3af"
                   secureTextEntry={!showPassword}
@@ -116,10 +183,15 @@ export default function LoginScreen() {
                   <Feather
                     name={showPassword ? "eye" : "eye-off"}
                     size={18}
-                    color="#9ca3af"
+                    color={passwordError ? "#ef4444" : "#9ca3af"}
                   />
                 </TouchableOpacity>
               </View>
+              {passwordError && (
+                <Text className="text-red-500 text-xs mt-1 ml-1 font-medium">
+                  Password is required
+                </Text>
+              )}
             </View>
 
             {/* Remember Me & Forgot Password */}
@@ -130,11 +202,10 @@ export default function LoginScreen() {
                 className="flex-row items-center"
               >
                 <View
-                  className={`w-5 h-5 rounded items-center justify-center border ${
-                    rememberMe
+                  className={`w-5 h-5 rounded items-center justify-center border ${rememberMe
                       ? "bg-orange-500 border-orange-500"
                       : "border-neutral-300 bg-white"
-                  }`}
+                    }`}
                 >
                   {rememberMe && (
                     <Ionicons name="checkmark" size={14} color="white" />
