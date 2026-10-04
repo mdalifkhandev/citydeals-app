@@ -76,20 +76,20 @@ export default function LoginScreen() {
     <SafeAreaView className="flex-1 bg-white">
       <StatusBar style="dark" />
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         className="flex-1"
       >
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
-            justifyContent: "center",
             paddingHorizontal: 24,
-            paddingVertical: 24,
+            paddingVertical: 16,
           }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Centered Logo */}
+          <View className="flex-1 justify-center my-auto">
+            {/* Centered Logo */}
           <View className="items-center mt-1 mb-2">
             <Image
               source={require("../../../assets/images/city-deals-logo.png")}
@@ -218,7 +218,7 @@ export default function LoginScreen() {
 
               <TouchableOpacity
                 activeOpacity={0.7}
-                onPress={() => alert("Forgot password pressed")}
+                onPress={() => router.push("/(auth)/forgot-password" as any)}
               >
                 <Text className="text-orange-600 font-semibold text-base">
                   Forgot Password?
@@ -280,6 +280,7 @@ export default function LoginScreen() {
                 Continue as Guest
               </Text>
             </TouchableOpacity>
+          </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

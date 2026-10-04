@@ -25,5 +25,25 @@ export const authApi = {
   getCurrentUser: async (): Promise<AuthResponse> => {
     const { data } = await apiClient.get<any>(ENDPOINTS.AUTH.ME);
     return data.data;
-  }
+  },
+
+  forgotPassword: async (email: string): Promise<{ success: boolean; message: string; otp?: string }> => {
+    const { data } = await apiClient.post(ENDPOINTS.AUTH.FORGOT_PASSWORD, { email });
+    return data?.data || data;
+  },
+
+  verifyOtp: async (payload: { email: string; otp: string }): Promise<{ success: boolean; message: string }> => {
+    const { data } = await apiClient.post(ENDPOINTS.AUTH.VERIFY_OTP, payload);
+    return data?.data || data;
+  },
+
+  resetPassword: async (payload: {
+    email: string;
+    otp: string;
+    newPassword: string;
+    confirmPassword: string;
+  }): Promise<{ success: boolean; message: string }> => {
+    const { data } = await apiClient.post(ENDPOINTS.AUTH.RESET_PASSWORD, payload);
+    return data?.data || data;
+  },
 };
