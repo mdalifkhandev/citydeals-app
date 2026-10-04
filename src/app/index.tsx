@@ -1,0 +1,132 @@
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
+import { router } from "expo-router";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import PrimaryButton from "../components/PrimaryButton";
+import { LANGUAGES } from "../config/constants";
+
+export default function LanguageSelectionScreen() {
+  const [selectedLanguage, setSelectedLanguage] = useState("en");
+
+  const handleContinue = () => {
+    router.push("/onboarding" as any);
+  };
+
+  return (
+    <SafeAreaView className="flex-1 bg-white justify-between">
+      <StatusBar style="dark" />
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: 24,
+          paddingTop: 24,
+          paddingBottom: 24,
+          flexGrow: 1,
+          justifyContent: "space-between",
+        }}
+      >
+        {/* Header Section */}
+        <View>
+          {/* Centered Logo */}
+          <View className="items-center mb-8">
+            <Image
+              source={require("../../assets/images/city-deals-logo.png")}
+              className="h-12 w-44"
+              resizeMode="contain"
+            />
+          </View>
+
+          {/* Heading */}
+          <View className="items-center mb-8">
+            <View className="w-16 h-16 rounded-full bg-orange-50 items-center justify-center mb-4 border border-orange-100">
+              <MaterialCommunityIcons
+                name="translate"
+                size={30}
+                color="#ea580c"
+              />
+            </View>
+            <Text className="text-2xl font-extrabold text-neutral-900 text-center tracking-tight">
+              Choose Your Language
+            </Text>
+            <Text className="text-neutral-500 text-base text-center mt-2 max-w-xs leading-6">
+              Please select your preferred language to continue exploring local
+              deals and offers.
+            </Text>
+          </View>
+
+          {/* Language Options */}
+          <View className="gap-y-3.5">
+            {LANGUAGES.map((lang) => {
+              const isSelected = selectedLanguage === lang.id;
+              return (
+                <TouchableOpacity
+                  key={lang.id}
+                  activeOpacity={0.8}
+                  onPress={() => setSelectedLanguage(lang.id)}
+                  className={`flex-row items-center justify-between px-5 h-16 rounded-2xl border ${
+                    isSelected
+                      ? "bg-orange-50 border-orange-500"
+                      : "bg-neutral-50 border-neutral-200"
+                  }`}
+                >
+                  <View className="flex-row items-center">
+                    <View
+                      className={`w-12 h-12 rounded-2xl items-center justify-center mr-3.5 ${
+                        isSelected ? "bg-orange-100" : "bg-neutral-100 border border-neutral-200"
+                      }`}
+                    >
+                      <Text className="text-2xl">
+                        {lang.flag}
+                      </Text>
+                    </View>
+                    <View>
+                      <Text
+                        className={`font-bold text-lg ${
+                          isSelected ? "text-orange-600" : "text-neutral-900"
+                        }`}
+                      >
+                        {lang.name}
+                      </Text>
+                      <Text className="text-neutral-500 text-base">
+                        {lang.nativeName}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View
+                    className={`w-6 h-6 rounded-full items-center justify-center border ${
+                      isSelected
+                        ? "bg-orange-500 border-orange-500"
+                        : "border-neutral-300 bg-white"
+                    }`}
+                  >
+                    {isSelected && (
+                      <Ionicons name="checkmark" size={16} color="white" />
+                    )}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Action CTA Button */}
+        <View className="pt-6">
+          <PrimaryButton
+            title="Continue"
+            onPress={handleContinue}
+          />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
