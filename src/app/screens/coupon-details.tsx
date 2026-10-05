@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { toast } from "sonner-native";
 import { Image } from "expo-image";
+import QRCode from "react-native-qrcode-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuthStore } from "../../features/auth/store/useAuthStore";
 import { couponsApi } from "../../features/coupons/services/couponsApi";
@@ -93,6 +94,11 @@ export default function CouponDetailsScreen() {
   const merchantAddress = coupon?.merchant?.address || (coupon?.area ? `${coupon.area.name}, ${coupon.area.city || ""}` : "Store location in-app");
   const couponCode = coupon?.couponCode || `CITY-${dealId ? dealId.slice(0, 8).toUpperCase() : "SAVE"}`;
   const dealUrl = coupon?.couponLink || `https://citydeals.ai/deals/${coupon?.shareSlug || dealId}`;
+
+  // Dynamic QR Code payload for live camera scanners
+  const qrPayload = useMemo(() => {
+    return `https://citydeals.ai/verify?code=${encodeURIComponent(couponCode)}&id=${encodeURIComponent(dealId)}`;
+  }, [couponCode, dealId]);
 
   // Image Source Resolution with bulletproof fallback
   const resolvedImageUrl = useMemo(() => {
@@ -197,11 +203,26 @@ export default function CouponDetailsScreen() {
     showToast("Coupon code copied to clipboard!");
   };
 
+function ensureHttps(url?: string | null): string | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+  return `https://${trimmed}`;
+}
+
   // Open store / deal website
   const handleOpenWebsite = () => {
-    const targetUrl = coupon?.merchant?.websiteUrl || coupon?.couponLink || dealUrl;
+    const raw = coupon?.merchant?.websiteUrl || coupon?.couponLink || dealUrl;
+    const targetUrl = ensureHttps(raw);
+    if (!targetUrl) {
+      toast.error("No website link available for this deal.");
+      return;
+    }
     Linking.openURL(targetUrl).catch(() => {
-      toast.error("Unable to open link.");
+      toast.error("Unable to open website link.");
     });
   };
 
@@ -241,30 +262,39 @@ export default function CouponDetailsScreen() {
       `Check out this offer on CityDeals!\n\n${dealHeading}\n${dealDescription}\n\nGet the coupon: ${dealUrl}`
     );
     Linking.openURL(`mailto:?subject=${subject}&body=${body}`).catch(() => {
-      showToast("Unable to open email app.");
+      toast.error("No email app configured on this device.");
     });
   };
 
   // Share to Social platforms
   const handleShareFacebook = async () => {
-    if (coupon?.merchant?.facebookUrl) {
-      Linking.openURL(coupon.merchant.facebookUrl).catch(() => {});
+    const fbProfile = ensureHttps(coupon?.merchant?.facebookUrl);
+    if (fbProfile) {
+      Linking.openURL(fbProfile).catch(() => {
+        shareToSocialPlatform("facebook", { dealHeading, dealDescription, dealUrl, imageSource }, showToast);
+      });
       return;
     }
     await shareToSocialPlatform("facebook", { dealHeading, dealDescription, dealUrl, imageSource }, showToast);
   };
 
   const handleShareInstagram = async () => {
-    if (coupon?.merchant?.instagramUrl) {
-      Linking.openURL(coupon.merchant.instagramUrl).catch(() => {});
+    const igProfile = ensureHttps(coupon?.merchant?.instagramUrl);
+    if (igProfile) {
+      Linking.openURL(igProfile).catch(() => {
+        shareToSocialPlatform("instagram", { dealHeading, dealDescription, dealUrl, imageSource }, showToast);
+      });
       return;
     }
     await shareToSocialPlatform("instagram", { dealHeading, dealDescription, dealUrl, imageSource }, showToast);
   };
 
   const handleShareTikTok = async () => {
-    if (coupon?.merchant?.tiktokUrl) {
-      Linking.openURL(coupon.merchant.tiktokUrl).catch(() => {});
+    const ttProfile = ensureHttps(coupon?.merchant?.tiktokUrl);
+    if (ttProfile) {
+      Linking.openURL(ttProfile).catch(() => {
+        shareToSocialPlatform("tiktok", { dealHeading, dealDescription, dealUrl, imageSource }, showToast);
+      });
       return;
     }
     await shareToSocialPlatform("tiktok", { dealHeading, dealDescription, dealUrl, imageSource }, showToast);
@@ -509,7 +539,8 @@ export default function CouponDetailsScreen() {
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleOpenMap}
-              className="flex-row items-center gap-1.5 rounded-xl px-3.5 py-2.5 bg-[#111827] active:bg-neutral-800"
+              style={{ backgroundColor: "#0f172a" }}
+              className="flex-row items-center gap-1.5 rounded-xl px-3.5 py-2.5 active:bg-neutral-800"
             >
               <Ionicons name="navigate-outline" size={15} color="#ffffff" />
               <Text className="text-white text-xs font-semibold">Directions</Text>
@@ -536,7 +567,8 @@ export default function CouponDetailsScreen() {
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleOpenWebsite}
-              className="flex-1 flex-row items-center justify-center gap-2 rounded-2xl py-3.5 bg-[#111827] active:bg-neutral-800 shadow-sm"
+              style={{ backgroundColor: "#0f172a" }}
+              className="flex-1 flex-row items-center justify-center gap-2 rounded-2xl py-3.5 active:bg-neutral-800 shadow-sm"
             >
               <Ionicons name="globe-outline" size={18} color="#ffffff" />
               <Text className="text-white text-sm font-semibold">Website</Text>
@@ -544,7 +576,8 @@ export default function CouponDetailsScreen() {
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleShareEmail}
-              className="flex-1 flex-row items-center justify-center gap-2 rounded-2xl py-3.5 bg-[#111827] active:bg-neutral-800 shadow-sm"
+              style={{ backgroundColor: "#0f172a" }}
+              className="flex-1 flex-row items-center justify-center gap-2 rounded-2xl py-3.5 active:bg-neutral-800 shadow-sm"
             >
               <Ionicons name="mail-outline" size={18} color="#ffffff" />
               <Text className="text-white text-sm font-semibold">Email</Text>
@@ -557,7 +590,8 @@ export default function CouponDetailsScreen() {
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleShareFacebook}
-              className="flex-1 items-center justify-center rounded-2xl py-3.5 bg-[#111827] active:bg-neutral-800 shadow-sm"
+              style={{ backgroundColor: "#0f172a" }}
+              className="flex-1 items-center justify-center rounded-2xl py-3.5 active:bg-neutral-800 shadow-sm"
             >
               <FontAwesome name="facebook" size={20} color="#ffffff" />
             </TouchableOpacity>
@@ -566,7 +600,8 @@ export default function CouponDetailsScreen() {
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleShareInstagram}
-              className="flex-1 items-center justify-center rounded-2xl py-3.5 bg-[#111827] active:bg-neutral-800 shadow-sm"
+              style={{ backgroundColor: "#0f172a" }}
+              className="flex-1 items-center justify-center rounded-2xl py-3.5 active:bg-neutral-800 shadow-sm"
             >
               <FontAwesome name="instagram" size={20} color="#ffffff" />
             </TouchableOpacity>
@@ -575,7 +610,8 @@ export default function CouponDetailsScreen() {
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleShareTikTok}
-              className="flex-1 items-center justify-center rounded-2xl py-3.5 bg-[#111827] active:bg-neutral-800 shadow-sm"
+              style={{ backgroundColor: "#0f172a" }}
+              className="flex-1 items-center justify-center rounded-2xl py-3.5 active:bg-neutral-800 shadow-sm"
             >
               <FontAwesome6 name="tiktok" size={18} color="#ffffff" />
             </TouchableOpacity>
@@ -584,7 +620,8 @@ export default function CouponDetailsScreen() {
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleShareSMS}
-              className="flex-1 items-center justify-center rounded-2xl py-3.5 bg-[#111827] active:bg-neutral-800 shadow-sm"
+              style={{ backgroundColor: "#0f172a" }}
+              className="flex-1 items-center justify-center rounded-2xl py-3.5 active:bg-neutral-800 shadow-sm"
             >
               <Ionicons
                 name="chatbubble-ellipses-outline"
@@ -706,7 +743,12 @@ export default function CouponDetailsScreen() {
               {/* QR Code Container */}
               <View className="w-full bg-neutral-50 rounded-3xl p-5 items-center border border-neutral-200 mt-5">
                 <View className="bg-white p-4 rounded-2xl border border-neutral-200/80 items-center justify-center mb-4 shadow-sm">
-                  <Ionicons name="qr-code" size={150} color="#0f172a" />
+                  <QRCode
+                    value={qrPayload}
+                    size={160}
+                    color="#0f172a"
+                    backgroundColor="#ffffff"
+                  />
                 </View>
 
                 {/* Coupon Code Pill */}
@@ -724,6 +766,13 @@ export default function CouponDetailsScreen() {
                     color="#ea580c"
                   />
                 </TouchableOpacity>
+
+                <View className="flex-row items-center gap-1.5 mt-2.5">
+                  <Ionicons name="scan-outline" size={13} color="#ea580c" />
+                  <Text className="text-[11px] font-semibold text-neutral-500">
+                    Live Scannable QR Code
+                  </Text>
+                </View>
               </View>
 
               <Text className="text-neutral-500 font-medium text-xs mt-3">
