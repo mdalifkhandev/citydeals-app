@@ -9,6 +9,8 @@ import {
 import { Image } from "expo-image";
 import PrimaryButton from "./PrimaryButton";
 
+import { useAuthStore } from "../features/auth/store/useAuthStore";
+
 export interface DealItem {
   id: string;
   category?: string;
@@ -16,12 +18,14 @@ export interface DealItem {
   dealHeading: string;
   dealDescription: string;
   isFavorite?: boolean;
+  distance?: string;
+  merchantName?: string;
 }
 
 interface DealCardProps {
   deal: DealItem;
   onPressOpen?: (deal: DealItem) => void;
-  onToggleFavorite?: (deal: DealItem) => void;
+  onToggleFavorite?: (deal: DealItem, currentFavorite?: boolean) => void;
 }
 
 export default function DealCard({
@@ -36,9 +40,14 @@ export default function DealCard({
   }, [deal.isFavorite]);
 
   const handleFavoriteToggle = () => {
-    const newState = !favorite;
-    setFavorite(newState);
-    onToggleFavorite?.({ ...deal, isFavorite: newState });
+    const isAuth = useAuthStore.getState().isAuthenticated;
+    if (!isAuth) {
+      onToggleFavorite?.(deal, favorite);
+      return;
+    }
+    const currentFav = favorite;
+    setFavorite(!currentFav);
+    onToggleFavorite?.(deal, currentFav);
   };
 
   const imageSource =
@@ -63,6 +72,38 @@ export default function DealCard({
           />
         </TouchableOpacity>
 
+        {/* Distance Badge */}
+        {deal.distance ? (
+          <View
+            style={{
+              position: "absolute",
+              top: 12,
+              left: 12,
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: "rgba(15, 23, 42, 0.8)",
+              paddingHorizontal: 10,
+              paddingVertical: 5,
+              borderRadius: 20,
+              zIndex: 20,
+              borderWidth: 1,
+              borderColor: "rgba(255, 255, 255, 0.2)",
+            }}
+          >
+            <Ionicons name="navigate-sharp" size={12} color="#ea580c" />
+            <Text
+              style={{
+                color: "#ffffff",
+                fontSize: 12,
+                fontWeight: "700",
+                marginLeft: 4,
+              }}
+            >
+              {deal.distance}
+            </Text>
+          </View>
+        ) : null}
+
         {/* Poster Image */}
         <Image
           source={imageSource}
@@ -74,6 +115,21 @@ export default function DealCard({
 
       {/* Card Info Details */}
       <View className="pt-3.5 pb-1 px-1">
+        {deal.merchantName ? (
+          <Text
+            style={{
+              color: "#ea580c",
+              fontSize: 12,
+              fontWeight: "700",
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
+              marginBottom: 4,
+            }}
+            numberOfLines={1}
+          >
+            {deal.merchantName}
+          </Text>
+        ) : null}
         <Text className="text-neutral-900 font-bold text-lg">
           {deal.dealHeading}
         </Text>

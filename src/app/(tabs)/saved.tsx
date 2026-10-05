@@ -64,7 +64,7 @@ export default function SavedScreen() {
       });
       return;
     }
-    toggleSaveMutation.mutate({ couponId: toggledDeal.id, isSaved: true });
+    toggleSaveMutation.mutate({ couponId: toggledDeal.id, isCurrentlySaved: true });
   };
 
   const handleExploreDeals = () => {

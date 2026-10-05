@@ -34,20 +34,37 @@ export const useToggleSaveCoupon = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ couponId, isSaved }: { couponId: string; isSaved: boolean }) => {
-      if (isSaved) {
-        return couponsApi.unsaveCoupon(couponId);
+    mutationFn: async ({
+      couponId,
+      isCurrentlySaved,
+      isSaved,
+    }: {
+      couponId: string;
+      isCurrentlySaved?: boolean;
+      isSaved?: boolean;
+    }) => {
+      // isCurrentlySaved indicates if the coupon was already saved before this action
+      const wasSaved = isCurrentlySaved !== undefined ? isCurrentlySaved : !!isSaved;
+      if (wasSaved) {
+        await couponsApi.unsaveCoupon(couponId);
+        return { couponId, saved: false };
       } else {
-        return couponsApi.saveCoupon(couponId);
+        await couponsApi.saveCoupon(couponId);
+        return { couponId, saved: true };
       }
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: SAVED_COUPONS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: COUPONS_QUERY_KEY });
-      toast.success(variables.isSaved ? "Removed from saved deals" : "Deal saved to your list!");
+      if (result.saved) {
+        toast.success("Deal saved to your list!");
+      } else {
+        toast.success("Removed from saved deals");
+      }
     },
-    onError: () => {
-      toast.error("Failed to update saved deal");
+    onError: (err: any) => {
+      const msg = err.response?.data?.message || err.message || "Failed to update saved deal";
+      toast.error(Array.isArray(msg) ? msg[0] : msg);
     },
   });
 };

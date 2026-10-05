@@ -18,8 +18,10 @@ import { toast } from "sonner-native";
 import { Image } from "expo-image";
 import QRCode from "react-native-qrcode-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "../../features/auth/store/useAuthStore";
 import { couponsApi } from "../../features/coupons/services/couponsApi";
+import { COUPONS_QUERY_KEY, SAVED_COUPONS_QUERY_KEY } from "../../features/coupons/hooks/useCoupons";
 import { Coupon } from "../../features/coupons/types";
 import {
   shareCouponWithSystemSheet,
@@ -30,6 +32,7 @@ const fallbackPlaceholder = require("../../../assets/images/placeholder-deal.jpg
 
 export default function CouponDetailsScreen() {
   const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
   const isLoggedIn = useAuthStore((state) => state.isAuthenticated);
 
   const params = useLocalSearchParams<{
@@ -189,6 +192,8 @@ export default function CouponDetailsScreen() {
         setIsSaved(true);
         showToast("Coupon saved successfully!");
       }
+      queryClient.invalidateQueries({ queryKey: SAVED_COUPONS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: COUPONS_QUERY_KEY });
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || "Failed to update saved deal";
       toast.error(Array.isArray(msg) ? msg[0] : msg);

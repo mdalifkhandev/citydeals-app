@@ -28,7 +28,7 @@ import { useCurrentUser } from "../../features/auth/hooks/useCurrentUser";
 import { useUserLocation } from "../../features/location/hooks/useUserLocation";
 import { useLocationStore } from "../../features/location/store/useLocationStore";
 import { useCategories } from "../../features/categories";
-import { useCoupons, useToggleSaveCoupon } from "../../features/coupons";
+import { useCoupons, useSavedCoupons, useToggleSaveCoupon } from "../../features/coupons";
 import { useDebounce } from "../../utils/useDebounce";
 import { useShallow } from "zustand/react/shallow";
 import { toast } from "sonner-native";
@@ -201,16 +201,25 @@ export default function HomeScreen() {
     searchQuery.trim() !== debouncedSearch ||
     (isCouponsLoading && debouncedSearch.length > 0);
 
+  const { data: savedCoupons = [], refetch: refetchSaved } = useSavedCoupons();
+
+  const savedSet = useMemo(() => {
+    if (!isLoggedIn || !savedCoupons) return new Set<string>();
+    return new Set(savedCoupons.map((c) => c.id));
+  }, [isLoggedIn, savedCoupons]);
+
   const toggleSaveMutation = useToggleSaveCoupon();
 
-  const handleToggleFavorite = (deal: DealItem) => {
+  const handleToggleFavorite = (deal: DealItem, currentFavorite?: boolean) => {
     if (!isLoggedIn) {
       toast.info("Sign In Required", {
         description: "Please sign in to save your favorite deals.",
       });
       return;
     }
-    toggleSaveMutation.mutate({ couponId: deal.id, isSaved: !!deal.isFavorite });
+    const isCurrentlySaved =
+      currentFavorite !== undefined ? currentFavorite : !!deal.isFavorite;
+    toggleSaveMutation.mutate({ couponId: deal.id, isCurrentlySaved });
   };
 
   const handleNotificationPress = () => {
@@ -230,6 +239,7 @@ export default function HomeScreen() {
     await Promise.all([
       refetchCoupons(),
       refetchCategories(),
+      isLoggedIn ? refetchSaved() : Promise.resolve(),
       isLoggedIn ? refetchUser() : Promise.resolve(),
       isAutoDetect ? refreshLocation() : Promise.resolve(),
     ]);
@@ -247,9 +257,9 @@ export default function HomeScreen() {
       dealHeading: c.title,
       dealDescription: c.description,
       image: c.imageUrl || require("../../../assets/images/placeholder-deal.jpg"),
-      isFavorite: c.isSaved ?? false,
+      isFavorite: c.isSaved || savedSet.has(c.id),
     }));
-  }, [serverCoupons]);
+  }, [serverCoupons, savedSet]);
 
   const handleOpenDeal = (deal: DealItem) => {
     router.push({
