@@ -27,6 +27,16 @@ export const authApi = {
     return data?.data || data;
   },
 
+  updateProfile: async (payload: {
+    fullName?: string;
+    phoneNumber?: string;
+    profilePictureUrl?: string;
+    dateOfBirth?: string;
+  }): Promise<User> => {
+    const { data } = await apiClient.patch<any>(ENDPOINTS.USERS.ME, payload);
+    return data?.data || data;
+  },
+
   forgotPassword: async (email: string): Promise<{ success: boolean; message: string; otp?: string }> => {
     const { data } = await apiClient.post(ENDPOINTS.AUTH.FORGOT_PASSWORD, { email });
     return data?.data || data;

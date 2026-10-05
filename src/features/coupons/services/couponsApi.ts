@@ -37,4 +37,9 @@ export const couponsApi = {
     const { data } = await apiClient.get<any>(ENDPOINTS.COUPONS.SAVED);
     return data?.data || data || [];
   },
+
+  getRedeemedCoupons: async (): Promise<Coupon[]> => {
+    const { data } = await apiClient.get<any>(ENDPOINTS.COUPONS.REDEEMED);
+    return data?.data || data || [];
+  },
 };

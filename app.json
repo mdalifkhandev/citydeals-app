@@ -51,7 +51,8 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Allow CityDeals to access your location to show local deals near you."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true

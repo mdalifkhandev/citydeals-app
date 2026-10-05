@@ -22,6 +22,7 @@ export const ENDPOINTS = {
   COUPONS: {
     LIST: "/coupons",
     SAVED: "/coupons/saved",
+    REDEEMED: "/coupons/redeemed",
   },
   CATEGORIES: {
     LIST: "/categories",

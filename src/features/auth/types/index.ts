@@ -12,12 +12,19 @@ export interface Area {
   radiusMeters?: number;
 }
 
+export interface UserStats {
+  savedCoupons?: number;
+  couponRedeemed?: number;
+  unreadNotifications?: number;
+}
+
 export interface User {
   id: string;
   email: string;
   fullName: string | null;
   phoneNumber: string | null;
   profilePictureUrl: string | null;
+  dateOfBirth?: string | null;
   role: Role;
   status: UserStatus;
   areaId?: string | null;
@@ -25,6 +32,7 @@ export interface User {
   latitude?: number | string | null;
   longitude?: number | string | null;
   address?: string | null;
+  stats?: UserStats;
 }
 
 export interface AuthTokens {

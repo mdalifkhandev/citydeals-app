@@ -3,8 +3,11 @@ import { couponsApi } from "../services/couponsApi";
 import { CouponFilterParams } from "../types";
 import { toast } from "sonner-native";
 
+import { useAuthStore } from "../../auth/store/useAuthStore";
+
 export const COUPONS_QUERY_KEY = ["coupons"] as const;
 export const SAVED_COUPONS_QUERY_KEY = ["saved_coupons"] as const;
+export const REDEEMED_COUPONS_QUERY_KEY = ["redeemed_coupons"] as const;
 
 export const useCoupons = (filters?: CouponFilterParams) => {
   return useQuery({
@@ -15,9 +18,21 @@ export const useCoupons = (filters?: CouponFilterParams) => {
 };
 
 export const useSavedCoupons = () => {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   return useQuery({
     queryKey: SAVED_COUPONS_QUERY_KEY,
     queryFn: couponsApi.getSavedCoupons,
+    enabled: isAuthenticated,
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
+export const useRedeemedCoupons = () => {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  return useQuery({
+    queryKey: REDEEMED_COUPONS_QUERY_KEY,
+    queryFn: couponsApi.getRedeemedCoupons,
+    enabled: isAuthenticated,
     staleTime: 1000 * 60 * 5,
   });
 };

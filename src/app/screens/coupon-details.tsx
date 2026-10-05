@@ -21,7 +21,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "../../features/auth/store/useAuthStore";
 import { couponsApi } from "../../features/coupons/services/couponsApi";
-import { COUPONS_QUERY_KEY, SAVED_COUPONS_QUERY_KEY } from "../../features/coupons/hooks/useCoupons";
+import { COUPONS_QUERY_KEY, SAVED_COUPONS_QUERY_KEY, REDEEMED_COUPONS_QUERY_KEY } from "../../features/coupons/hooks/useCoupons";
 import { Coupon } from "../../features/coupons/types";
 import {
   shareCouponWithSystemSheet,
@@ -157,6 +157,8 @@ export default function CouponDetailsScreen() {
       await couponsApi.redeemCoupon(dealId);
       setIsRedeemed(true);
       setIsRedeemModalVisible(true);
+      queryClient.invalidateQueries({ queryKey: REDEEMED_COUPONS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
       showToast("Coupon redeemed successfully!");
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || "Failed to redeem coupon";
@@ -165,6 +167,8 @@ export default function CouponDetailsScreen() {
       if (err.response?.status === 409 || errorText.toLowerCase().includes("already redeemed")) {
         setIsRedeemed(true);
         setIsRedeemModalVisible(true);
+        queryClient.invalidateQueries({ queryKey: REDEEMED_COUPONS_QUERY_KEY });
+        queryClient.invalidateQueries({ queryKey: ["currentUser"] });
         showToast("You have already redeemed this coupon.");
       } else {
         toast.error(errorText);
