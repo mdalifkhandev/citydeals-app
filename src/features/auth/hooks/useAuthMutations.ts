@@ -66,13 +66,27 @@ export const useAuthMutations = () => {
   });
 
   const logoutMutation = useMutation({
-    mutationFn: authApi.logout,
+    mutationFn: async () => {
+      // Fire-and-forget: call backend logout to invalidate refreshTokenHash
+      try {
+        await authApi.logout();
+      } catch {
+        // Even if the API call fails (e.g. token already expired), we proceed
+      }
+    },
     onSettled: async () => {
-      // Regardless of success/failure of the logout API call, clear local state
-      queryClient.clear();
-      await tokenService.clearTokens();
-      clearSession();
+      // IMPORTANT: Navigate FIRST while the navigation context still exists,
+      // then clear session. clearSession() sets isAuthenticated=false which
+      // unmounts the profile tab and destroys the navigation context.
       router.replace("/(auth)/login" as any);
+
+      // Small delay to let navigation commit before we tear down state
+      setTimeout(async () => {
+        queryClient.clear();
+        await tokenService.clearTokens();
+        clearSession();
+      }, 100);
+
       toast.success("Logged out successfully");
     },
   });

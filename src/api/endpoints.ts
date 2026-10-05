@@ -9,6 +9,7 @@ export const ENDPOINTS = {
     FORGOT_PASSWORD: "/auth/forgot-password",
     VERIFY_OTP: "/auth/verify-otp",
     RESET_PASSWORD: "/auth/reset-password",
+    CHANGE_PASSWORD: "/auth/change-password",
     LOCATION_SYNC: "/auth/location/sync",
   },
   USERS: {

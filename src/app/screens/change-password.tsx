@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,10 +11,15 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { toast } from "sonner-native";
 import CurvedHeader from "../../components/CurvedHeader";
 import PrimaryButton from "../../components/PrimaryButton";
+import { authApi } from "../../features/auth/services/authApi";
+import { useAuthStore } from "../../features/auth/store/useAuthStore";
 
 export default function ChangePasswordScreen() {
+  const isLoggedIn = useAuthStore((state) => state.isAuthenticated);
+
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
@@ -22,26 +27,65 @@ export default function ChangePasswordScreen() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChangePassword = () => {
-    if (!currentPassword || !newPassword || !confirmNewPassword) {
-      alert("Please fill in all password fields.");
+  useEffect(() => {
+    if (!isLoggedIn) {
+      toast.info("Please sign in to change your password");
+      router.replace("/(auth)/login" as any);
+    }
+  }, [isLoggedIn]);
+
+  const hasMinLength = newPassword.length >= 8;
+  const hasNumberOrSpecial = /[0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(newPassword);
+
+  const handleChangePassword = async () => {
+    if (!currentPassword) {
+      toast.error("Please enter your current password");
       return;
     }
-    if (newPassword !== confirmNewPassword) {
-      alert("New password and confirm password do not match.");
+    if (!newPassword) {
+      toast.error("Please enter your new password");
       return;
     }
     if (newPassword.length < 8) {
-      alert("New password must be at least 8 characters long.");
+      toast.error("New password must be at least 8 characters long");
       return;
     }
-    alert("Password updated successfully!");
-    router.back();
-  };
+    if (!hasNumberOrSpecial) {
+      toast.error("New password must contain at least one number or special character");
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      toast.error("New password and confirm password do not match");
+      return;
+    }
+    if (currentPassword === newPassword) {
+      toast.error("New password must be different from current password");
+      return;
+    }
 
-  const hasMinLength = newPassword.length >= 8;
-  const hasNumberOrSpecial = /[0-9!@#$%^&*]/.test(newPassword);
+    try {
+      setIsSubmitting(true);
+      await authApi.changePassword({
+        currentPassword,
+        newPassword,
+        confirmPassword: confirmNewPassword,
+      });
+
+      toast.success("Password changed successfully!");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+      router.back();
+    } catch (err: any) {
+      const msg =
+        err.response?.data?.message || err.message || "Failed to update password";
+      toast.error(Array.isArray(msg) ? msg[0] : msg);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <View className="flex-1 bg-neutral-50">
@@ -60,11 +104,11 @@ export default function ChangePasswordScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Card Container */}
-          <View className="bg-white rounded-3xl p-5 mx-4 mt-6 border border-neutral-100">
+          <View className="bg-white rounded-3xl p-5 mx-4 mt-6 border border-neutral-100 shadow-sm">
             <Text className="text-neutral-900 font-bold text-lg mb-1">
               Update Password
             </Text>
-            <Text className="text-neutral-500 text-base mb-5 leading-6">
+            <Text className="text-neutral-500 text-sm mb-5 leading-5">
               Ensure your account is using a secure and strong password.
             </Text>
 
@@ -94,7 +138,7 @@ export default function ChangePasswordScreen() {
                   </TouchableOpacity>
                 </View>
                 <View className="absolute -top-2.5 left-4 bg-white px-1.5 z-10">
-                  <Text className="text-neutral-600 text-base font-medium">
+                  <Text className="text-neutral-600 text-xs font-semibold">
                     Current Password
                   </Text>
                 </View>
@@ -107,7 +151,7 @@ export default function ChangePasswordScreen() {
                   <TextInput
                     value={newPassword}
                     onChangeText={setNewPassword}
-                    placeholder="Enter new password"
+                    placeholder="Enter new password (min. 8 characters)"
                     placeholderTextColor="#9ca3af"
                     secureTextEntry={!showNewPassword}
                     className="flex-1 ml-2.5 text-neutral-900 text-base font-medium py-0"
@@ -125,7 +169,7 @@ export default function ChangePasswordScreen() {
                   </TouchableOpacity>
                 </View>
                 <View className="absolute -top-2.5 left-4 bg-white px-1.5 z-10">
-                  <Text className="text-neutral-600 text-base font-medium">
+                  <Text className="text-neutral-600 text-xs font-semibold">
                     New Password
                   </Text>
                 </View>
@@ -158,7 +202,7 @@ export default function ChangePasswordScreen() {
                   </TouchableOpacity>
                 </View>
                 <View className="absolute -top-2.5 left-4 bg-white px-1.5 z-10">
-                  <Text className="text-neutral-600 text-base font-medium">
+                  <Text className="text-neutral-600 text-xs font-semibold">
                     Confirm New Password
                   </Text>
                 </View>
@@ -178,10 +222,10 @@ export default function ChangePasswordScreen() {
                   color={hasMinLength ? "#16a34a" : "#9ca3af"}
                 />
                 <Text
-                  className={`ml-2 text-base ${
+                  className={`ml-2 text-sm ${
                     hasMinLength
-                      ? "text-emerald-700 font-medium"
-                      : "text-neutral-500"
+                      ? "text-emerald-700 font-semibold"
+                      : "text-neutral-500 font-normal"
                   }`}
                 >
                   Minimum 8 characters long
@@ -199,10 +243,10 @@ export default function ChangePasswordScreen() {
                   color={hasNumberOrSpecial ? "#16a34a" : "#9ca3af"}
                 />
                 <Text
-                  className={`ml-2 text-base ${
+                  className={`ml-2 text-sm ${
                     hasNumberOrSpecial
-                      ? "text-emerald-700 font-medium"
-                      : "text-neutral-500"
+                      ? "text-emerald-700 font-semibold"
+                      : "text-neutral-500 font-normal"
                   }`}
                 >
                   Contains a number or special character
@@ -216,6 +260,8 @@ export default function ChangePasswordScreen() {
             <PrimaryButton
               title="Save Password"
               onPress={handleChangePassword}
+              loading={isSubmitting}
+              disabled={isSubmitting}
             />
           </View>
         </ScrollView>
