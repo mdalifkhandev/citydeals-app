@@ -23,6 +23,16 @@ export const couponsApi = {
     return data?.data || data;
   },
 
+  getCouponById: async (id: string): Promise<Coupon> => {
+    const { data } = await apiClient.get<any>(`/coupons/${id}`);
+    return data?.data || data;
+  },
+
+  redeemCoupon: async (couponId: string): Promise<any> => {
+    const { data } = await apiClient.post<any>(`/coupons/${couponId}/redeem`);
+    return data?.data || data;
+  },
+
   getSavedCoupons: async (): Promise<Coupon[]> => {
     const { data } = await apiClient.get<any>(ENDPOINTS.COUPONS.SAVED);
     return data?.data || data || [];

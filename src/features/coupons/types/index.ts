@@ -65,6 +65,11 @@ export interface Coupon {
   area?: Area | null;
   category?: CouponCategory | null;
   isSaved?: boolean;
+  isRedeemed?: boolean;
+  _count?: {
+    redemptions: number;
+    savedBy: number;
+  };
 }
 
 export interface CouponFilterParams {

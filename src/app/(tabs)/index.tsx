@@ -259,7 +259,7 @@ export default function HomeScreen() {
         dealHeading: deal.dealHeading,
         dealDescription: deal.dealDescription,
         category: deal.category ?? "",
-        imageUrl: typeof deal.image === "string" ? deal.image : "",
+        imageUrl: typeof deal.image === "string" ? encodeURIComponent(deal.image) : "",
       },
     });
   };

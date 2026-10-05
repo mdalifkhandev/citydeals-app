@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ImageSourcePropType,
   Text,
@@ -30,6 +30,10 @@ export default function DealCard({
   onToggleFavorite,
 }: DealCardProps) {
   const [favorite, setFavorite] = useState(deal.isFavorite ?? false);
+
+  useEffect(() => {
+    setFavorite(deal.isFavorite ?? false);
+  }, [deal.isFavorite]);
 
   const handleFavoriteToggle = () => {
     const newState = !favorite;
