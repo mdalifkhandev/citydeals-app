@@ -38,6 +38,7 @@ export default function CouponDetailsScreen() {
     dealHeading?: string;
     dealDescription?: string;
     category?: string;
+    imageUrl?: string;
   }>();
 
   const dealId = params.id || "1";
@@ -45,7 +46,7 @@ export default function CouponDetailsScreen() {
 
   const dealHeading = params.dealHeading || matchedDeal?.dealHeading || "Exclusive Coupon Deal";
   const dealDescription = params.dealDescription || matchedDeal?.dealDescription || "Show this coupon to get instant savings at checkout.";
-  const dealImage = matchedDeal?.image || require("../../../assets/images/placeholder-deal.jpg");
+  const dealImage = params.imageUrl ? { uri: params.imageUrl } : matchedDeal?.image || require("../../../assets/images/placeholder-deal.jpg");
   const dealUrl = `https://citydeals.ai/deals/${dealId}`;
   const couponCode = `CITY-${dealId.padStart(4, "0")}-SAVE`;
   const shareMessage = `Check out this special offer on CityDeals! 🎉\n\n${dealHeading}\n${dealDescription}\n\nGet the coupon: ${dealUrl}`;

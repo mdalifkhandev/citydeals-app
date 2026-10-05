@@ -22,7 +22,6 @@ import EmptyDealsState from "../../components/EmptyDealsState";
 import AreaSelectorModal from "../../components/AreaSelectorModal";
 import DealCardSkeleton from "../../components/DealCardSkeleton";
 import CategoryPillSkeleton from "../../components/CategoryPillSkeleton";
-import { MOCK_DEALS } from "../../config/constants";
 import { AnimatedFlashList as OriginalAnimatedFlashList } from "@shopify/flash-list";
 import { useAuthStore } from "../../features/auth/store/useAuthStore";
 import { useCurrentUser } from "../../features/auth/hooks/useCurrentUser";
@@ -167,16 +166,7 @@ export default function HomeScreen() {
   const categoryList = useMemo(() => {
     const allItem = { id: "all", name: "All", slug: "all" };
     if (!serverCategories || serverCategories.length === 0) {
-      return [
-        allItem,
-        { id: "restaurants", name: "Restaurants", slug: "restaurants" },
-        { id: "shopping", name: "Shopping", slug: "shopping" },
-        { id: "groceries", name: "Groceries", slug: "groceries" },
-        { id: "electronics", name: "Electronics", slug: "electronics" },
-        { id: "beauty", name: "Beauty", slug: "beauty" },
-        { id: "travel", name: "Travel", slug: "travel" },
-        { id: "fitness", name: "Fitness", slug: "fitness" },
-      ];
+      return [allItem];
     }
     return [allItem, ...serverCategories];
   }, [serverCategories]);
@@ -247,27 +237,19 @@ export default function HomeScreen() {
   };
 
   const filteredDeals = useMemo(() => {
-    let list: DealItem[] = [];
-
-    if (serverCoupons && serverCoupons.length > 0) {
-      list = serverCoupons.map((c) => ({
-        id: c.id,
-        category: c.category?.name || "General",
-        dealHeading: c.title,
-        dealDescription: c.description,
-        image: c.imageUrl || require("../../../assets/images/placeholder-deal.jpg"),
-        isFavorite: c.isSaved ?? false,
-      }));
-    } else if (
-      !isCouponsLoading &&
-      selectedCategorySlug === "all" &&
-      debouncedSearch.length === 0
-    ) {
-      list = MOCK_DEALS;
+    if (!serverCoupons || serverCoupons.length === 0) {
+      return [];
     }
 
-    return list;
-  }, [serverCoupons, isCouponsLoading, selectedCategorySlug, debouncedSearch]);
+    return serverCoupons.map((c) => ({
+      id: c.id,
+      category: c.category?.name || "General",
+      dealHeading: c.title,
+      dealDescription: c.description,
+      image: c.imageUrl || require("../../../assets/images/placeholder-deal.jpg"),
+      isFavorite: c.isSaved ?? false,
+    }));
+  }, [serverCoupons]);
 
   const handleOpenDeal = (deal: DealItem) => {
     router.push({
@@ -277,6 +259,7 @@ export default function HomeScreen() {
         dealHeading: deal.dealHeading,
         dealDescription: deal.dealDescription,
         category: deal.category ?? "",
+        imageUrl: typeof deal.image === "string" ? deal.image : "",
       },
     });
   };
