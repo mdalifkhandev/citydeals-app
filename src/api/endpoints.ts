@@ -32,4 +32,8 @@ export const ENDPOINTS = {
     LIST: "/areas",
     RESOLVE: "/areas/resolve",
   },
+  NOTIFICATIONS: {
+    LIST: "/notifications",
+    SETTINGS: "/me/notifications",
+  },
 };

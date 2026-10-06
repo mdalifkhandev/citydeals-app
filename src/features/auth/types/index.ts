@@ -25,6 +25,7 @@ export interface User {
   phoneNumber: string | null;
   profilePictureUrl: string | null;
   dateOfBirth?: string | null;
+  notificationsPaused?: boolean;
   role: Role;
   status: UserStatus;
   areaId?: string | null;

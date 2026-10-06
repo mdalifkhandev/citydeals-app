@@ -1,17 +1,23 @@
 import React from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useCurrentUser } from "../features/auth/hooks/useCurrentUser";
 
 interface CurvedHeaderProps {
   title: string;
   showBackButton?: boolean;
+  showNotificationBell?: boolean;
 }
 
 export default function CurvedHeader({
   title,
   showBackButton = false,
+  showNotificationBell = false,
 }: CurvedHeaderProps) {
+  const { data: currentUser } = useCurrentUser();
+  const unreadCount = currentUser?.stats?.unreadNotifications ?? 0;
+
   return (
     <View className="relative bg-[#0f3b5e] pt-14 pb-8 px-6 rounded-b-[28px] overflow-hidden">
       <Image
@@ -37,7 +43,20 @@ export default function CurvedHeader({
           {title}
         </Text>
 
-        <View className="w-11" />
+        {showNotificationBell ? (
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => router.push("/screens/notifications" as any)}
+            className="w-11 h-11 items-center justify-center relative"
+          >
+            <Ionicons name="notifications-outline" size={24} color="#ffffff" />
+            {unreadCount > 0 && (
+              <View className="absolute top-2 right-2 w-2.5 h-2.5 bg-orange-500 rounded-full border border-[#0f3b5e]" />
+            )}
+          </TouchableOpacity>
+        ) : (
+          <View className="w-11" />
+        )}
       </View>
     </View>
   );

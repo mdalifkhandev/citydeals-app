@@ -19,6 +19,8 @@ import { useAuthMutations } from "../../features/auth/hooks/useAuthMutations";
 import { useCurrentUser } from "../../features/auth/hooks/useCurrentUser";
 import { useSavedCoupons, useRedeemedCoupons } from "../../features/coupons/hooks/useCoupons";
 import { useShallow } from "zustand/react/shallow";
+import { useUpdateNotificationSettings } from "../../features/notifications/hooks/useNotifications";
+
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -43,7 +45,8 @@ export default function ProfileScreen() {
   } = useRedeemedCoupons();
 
   const { logoutMutation } = useAuthMutations();
-  const [pushNotification, setPushNotification] = useState(true);
+  const { mutate: updateNotificationSettings } = useUpdateNotificationSettings();
+  
   const [selectedLanguage, setSelectedLanguage] = useState("English");
   const [isLanguageSheetOpen, setIsLanguageSheetOpen] = useState(false);
   const [isRedeemedModalOpen, setIsRedeemedModalOpen] = useState(false);
@@ -272,8 +275,14 @@ export default function ProfileScreen() {
               </Text>
             </View>
             <Switch
-              value={pushNotification}
-              onValueChange={setPushNotification}
+              value={isLoggedIn ? !(user?.notificationsPaused) : false}
+              onValueChange={(val) => {
+                if (!isLoggedIn) {
+                  router.push("/(auth)/login" as any);
+                  return;
+                }
+                updateNotificationSettings(!val);
+              }}
               trackColor={{ false: "#e2e8f0", true: "#ea580c" }}
               thumbColor="#ffffff"
             />

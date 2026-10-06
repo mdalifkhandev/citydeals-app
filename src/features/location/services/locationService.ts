@@ -155,14 +155,17 @@ export const locationService = {
     }
   },
 
-  /**
-   * Sync coordinates with backend to update user's location and nearest area
-   */
   syncLocationWithBackend: async (coords: LocationCoords) => {
     try {
+      const { registerForPushNotificationsAsync } = await import(
+        "../../notifications/services/pushNotificationService"
+      );
+      const fcmToken = await registerForPushNotificationsAsync();
+
       const response = await apiClient.post<any>(ENDPOINTS.AUTH.LOCATION_SYNC, {
         latitude: coords.latitude,
         longitude: coords.longitude,
+        fcmToken: fcmToken || undefined,
       });
 
       const updatedData = response.data?.data || response.data;

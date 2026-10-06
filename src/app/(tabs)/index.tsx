@@ -227,11 +227,10 @@ export default function HomeScreen() {
       toast.info("Notifications", {
         description: "Sign in to receive instant deal alerts in your area.",
       });
+      router.push("/(auth)/login" as any);
       return;
     }
-    toast.info("Notifications Up to Date", {
-      description: `You are tuned in for the latest deals in ${locationDisplay}.`,
-    });
+    router.push("/screens/notifications" as any);
   };
 
   const handleRefresh = async () => {

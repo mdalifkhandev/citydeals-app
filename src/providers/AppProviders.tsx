@@ -20,6 +20,18 @@ function AuthInitializer() {
   return null;
 }
 
+function NotificationInitializer() {
+  useEffect(() => {
+    import("../features/notifications/services/pushNotificationService").then(
+      ({ setupNotificationListeners }) => {
+        const cleanup = setupNotificationListeners();
+        return cleanup;
+      }
+    );
+  }, []);
+  return null;
+}
+
 interface AppProvidersProps {
   children: React.ReactNode;
 }
@@ -31,6 +43,7 @@ export default function AppProviders({ children }: AppProvidersProps) {
         <QueryClientProvider client={queryClient}>
           <AuthInitializer />
           <LocationInitializer />
+          <NotificationInitializer />
           {children}
           <Toaster />
         </QueryClientProvider>
