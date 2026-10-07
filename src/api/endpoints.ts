@@ -36,4 +36,8 @@ export const ENDPOINTS = {
     LIST: "/notifications",
     SETTINGS: "/me/notifications",
   },
+  SUPPORT: {
+    CREATE_TICKET: "/support/tickets",
+  },
 };
+
