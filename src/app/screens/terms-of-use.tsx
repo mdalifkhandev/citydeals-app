@@ -1,89 +1,186 @@
-import React from "react";
-import { View, Text, ScrollView } from "react-native";
+import React, { useMemo } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  RefreshControl,
+  ActivityIndicator,
+  TouchableOpacity,
+} from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { Feather } from "@expo/vector-icons";
 import CurvedHeader from "../../components/CurvedHeader";
+import { useTermsOfUse } from "../../features/legal/hooks/useLegal";
+
+interface Section {
+  title?: string;
+  body: string;
+}
 
 export default function TermsOfUseScreen() {
+  const {
+    data: terms,
+    isLoading,
+    isError,
+    refetch,
+    isRefetching,
+  } = useTermsOfUse();
+
+  const formattedDate = useMemo(() => {
+    if (!terms?.updatedAt) return "Recently Updated";
+    try {
+      const d = new Date(terms.updatedAt);
+      return `Last updated: ${d.toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      })}`;
+    } catch {
+      return "Recently Updated";
+    }
+  }, [terms?.updatedAt]);
+
+  const parsedSections = useMemo<Section[]>(() => {
+    if (!terms?.content) return [];
+
+    const rawParagraphs = terms.content
+      .split(/\n\n+/)
+      .map((p) => p.trim())
+      .filter(Boolean);
+
+    const sections: Section[] = [];
+
+    for (const paragraph of rawParagraphs) {
+      if (paragraph.startsWith("#")) {
+        const lines = paragraph.split("\n");
+        const titleLine = lines[0].replace(/^#+\s*/, "").trim();
+        const bodyText = lines.slice(1).join("\n").trim();
+        sections.push({ title: titleLine, body: bodyText || titleLine });
+      } else {
+        const lines = paragraph.split("\n");
+        const firstLine = lines[0].trim();
+        const isHeaderLike =
+          /^\d+\.\s+[A-Za-z0-9\s&/'-]+$/.test(firstLine) ||
+          (firstLine.length < 50 && lines.length > 1);
+
+        if (isHeaderLike && lines.length > 1) {
+          sections.push({
+            title: firstLine,
+            body: lines.slice(1).join("\n").trim(),
+          });
+        } else {
+          sections.push({ body: paragraph });
+        }
+      }
+    }
+
+    return sections;
+  }, [terms?.content]);
+
   return (
     <View className="flex-1 bg-neutral-50">
       <StatusBar style="light" />
 
       {/* Curved Navy Top Header */}
-      <CurvedHeader title="Terms of Use" showBackButton />
+      <CurvedHeader title={terms?.title || "Terms of Use"} showBackButton />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 50 }}
+        contentContainerStyle={{ paddingBottom: 60 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor="#ea580c"
+            colors={["#ea580c"]}
+          />
+        }
       >
-        <View className="bg-white rounded-3xl p-5 mx-4 mt-6 border border-neutral-100">
-          {/* Last Updated Badge */}
-          <View className="self-start bg-orange-50 border border-orange-200/60 px-3.5 py-1.5 rounded-full mb-4">
-            <Text className="text-orange-600 font-bold text-base">
-              Last updated: August 2026
-            </Text>
+        <View className="bg-white rounded-3xl p-5 mx-4 mt-6 border border-neutral-100 shadow-xs">
+          {/* Header Badges */}
+          <View className="flex-row items-center justify-between mb-4">
+            <View className="self-start bg-orange-50 border border-orange-200/60 px-3.5 py-1.5 rounded-full">
+              <Text className="text-orange-600 font-bold text-xs">
+                {formattedDate}
+              </Text>
+            </View>
+            {terms?.version && (
+              <View className="bg-neutral-100 border border-neutral-200 px-2.5 py-1 rounded-full">
+                <Text className="text-neutral-600 font-semibold text-xs">
+                  v{terms.version}
+                </Text>
+              </View>
+            )}
           </View>
 
-          <Text className="text-neutral-500 text-base leading-6 mb-6">
-            Please read these terms and conditions carefully before using the CityDeals application. By accessing or using the platform, you agree to be bound by these terms.
-          </Text>
+          {/* Loading State */}
+          {isLoading && !isRefetching && (
+            <View className="py-16 items-center justify-center">
+              <ActivityIndicator size="large" color="#ea580c" />
+              <Text className="text-neutral-500 text-sm mt-3 font-medium">
+                Loading terms & conditions...
+              </Text>
+            </View>
+          )}
 
-          {/* Section 1 */}
-          <View className="mb-6">
-            <Text className="text-neutral-900 font-bold text-lg mb-2">
-              1. Acceptance of Terms
-            </Text>
-            <Text className="text-neutral-600 text-base leading-6">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-            </Text>
+          {/* Error State */}
+          {isError && !isLoading && (
+            <View className="py-12 items-center justify-center px-4">
+              <View className="w-14 h-14 rounded-2xl bg-red-50 items-center justify-center mb-3 border border-red-100">
+                <Feather name="alert-circle" size={26} color="#ef4444" />
+              </View>
+              <Text className="text-neutral-800 font-bold text-base text-center">
+                Unable to load terms
+              </Text>
+              <Text className="text-neutral-500 text-sm text-center mt-1 mb-5">
+                Please check your network connection and try again.
+              </Text>
+              <TouchableOpacity
+                onPress={() => refetch()}
+                className="bg-orange-500 px-5 py-2.5 rounded-xl flex-row items-center"
+                activeOpacity={0.8}
+              >
+                <Feather name="refresh-cw" size={14} color="#ffffff" />
+                <Text className="text-white font-bold text-sm ml-2">Retry</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Content Loaded */}
+          {!isLoading && !isError && (
+            <>
+              <Text className="text-neutral-600 text-sm leading-6 mb-6">
+                Please read these terms and conditions carefully before using
+                the CityDeals application. By accessing or using the platform,
+                you agree to be bound by these terms.
+              </Text>
+
+              {parsedSections.map((sec, index) => (
+                <View key={index} className="mb-6 last:mb-2">
+                  {sec.title && (
+                    <Text className="text-neutral-900 font-extrabold text-base mb-2">
+                      {sec.title}
+                    </Text>
+                  )}
+                  <Text className="text-neutral-600 text-sm leading-6">
+                    {sec.body}
+                  </Text>
+                </View>
+              ))}
+            </>
+          )}
+        </View>
+
+        {/* Contact Support Assistance Card */}
+        <View className="mx-4 mt-4 bg-white rounded-2xl p-4 border border-neutral-100 flex-row items-center">
+          <View className="w-10 h-10 rounded-xl bg-orange-50 items-center justify-center mr-3.5 border border-orange-100">
+            <Feather name="help-circle" size={20} color="#ea580c" />
           </View>
-
-          {/* Section 2 */}
-          <View className="mb-6">
-            <Text className="text-neutral-900 font-bold text-lg mb-2">
-              2. User Accounts & Registration
+          <View className="flex-1">
+            <Text className="text-neutral-900 font-bold text-sm">
+              Questions about our Terms?
             </Text>
-            <Text className="text-neutral-600 text-base leading-6">
-              Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-            </Text>
-          </View>
-
-          {/* Section 3 */}
-          <View className="mb-6">
-            <Text className="text-neutral-900 font-bold text-lg mb-2">
-              3. Coupon Redemption & Store Offers
-            </Text>
-            <Text className="text-neutral-600 text-base leading-6">
-              Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida.
-            </Text>
-          </View>
-
-          {/* Section 4 */}
-          <View className="mb-6">
-            <Text className="text-neutral-900 font-bold text-lg mb-2">
-              4. Merchant Terms & Availability
-            </Text>
-            <Text className="text-neutral-600 text-base leading-6">
-              Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Proin pharetra nonummy pede. Mauris et orci. Aenean nec lorem. In porttitor. Donec laoreet nonummy augue.
-            </Text>
-          </View>
-
-          {/* Section 5 */}
-          <View className="mb-6">
-            <Text className="text-neutral-900 font-bold text-lg mb-2">
-              5. Limitation of Liability
-            </Text>
-            <Text className="text-neutral-600 text-base leading-6">
-              Suspendisse dui purus, scelerisque at, vulputate vitae, pretium mattis, nunc. Mauris eget neque at sem venenatis eleifend. Ut nonummy. Fusce aliquet pede non pede. Suspendisse dapibus lorem pellentesque magna.
-            </Text>
-          </View>
-
-          {/* Section 6 */}
-          <View>
-            <Text className="text-neutral-900 font-bold text-lg mb-2">
-              6. Modifications & Contact
-            </Text>
-            <Text className="text-neutral-600 text-base leading-6">
-              CityDeals reserves the right to modify or replace these terms at any time. If you have questions regarding these terms, please contact us at support@citydeals.ai.
+            <Text className="text-neutral-500 text-xs mt-0.5">
+              Contact us at support@citydeals.com
             </Text>
           </View>
         </View>

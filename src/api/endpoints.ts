@@ -39,5 +39,10 @@ export const ENDPOINTS = {
   SUPPORT: {
     CREATE_TICKET: "/support/tickets",
   },
+  LEGAL: {
+    TERMS: "/legal/terms",
+    PAGES: "/legal/pages",
+    PAGE: (type: string) => `/legal/pages/${type}`,
+  },
 };
 
