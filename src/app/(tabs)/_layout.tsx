@@ -1,72 +1,115 @@
 import React from "react";
-import { Pressable } from "react-native";
+import { View, Text, TouchableOpacity, Platform } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
+interface CustomTabBarProps {
+  state: any;
+  descriptors: any;
+  navigation: any;
+  insets: any;
+}
+
+function CustomBottomTabBar({
+  state,
+  descriptors,
+  navigation,
+  insets,
+}: CustomTabBarProps) {
+  const safeBottom = Math.max(insets.bottom, Platform.OS === "android" ? 6 : 0);
+  const barHeight = 64 + safeBottom;
+
+  return (
+    <View
+      style={{
+        position: "absolute",
+        left: 0,
+        right: 0,
+        bottom: 0,
+        height: barHeight,
+        paddingBottom: safeBottom,
+        backgroundColor: "#ffffff",
+        borderTopLeftRadius: 28,
+        borderTopRightRadius: 28,
+        borderTopWidth: 1,
+        borderTopColor: "#f1f5f9",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-around",
+        elevation: 14,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 10,
+      }}
+    >
+      {state.routes.map((route: any, index: number) => {
+        const isFocused = state.index === index;
+        const { options } = descriptors[route.key];
+        const label = options.title || route.name;
+
+        const onPress = () => {
+          const event = navigation.emit({
+            type: "tabPress",
+            target: route.key,
+            canPreventDefault: true,
+          });
+
+          if (!isFocused && !event.defaultPrevented) {
+            navigation.navigate(route.name);
+          }
+        };
+
+        return (
+          <TouchableOpacity
+            key={route.key}
+            activeOpacity={0.7}
+            onPress={onPress}
+            style={{
+              flex: 1,
+              height: "100%",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {options.tabBarIcon?.({
+              focused: isFocused,
+              color: isFocused ? "#ea580c" : "#94a3b8",
+              size: 24,
+            })}
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "600",
+                color: isFocused ? "#ea580c" : "#94a3b8",
+                marginTop: 4,
+                textAlign: "center",
+              }}
+            >
+              {label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
 
 export default function TabLayout() {
-  const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   return (
     <Tabs
+      tabBar={(props) => <CustomBottomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        tabBarButton: (props) => (
-          <Pressable
-            {...(props as any)}
-            android_ripple={null}
-            style={(state) => [
-              typeof props.style === "function"
-                ? (props.style as any)(state)
-                : props.style,
-              { opacity: state.pressed ? 0.8 : 1 },
-            ]}
-          />
-        ),
-        tabBarActiveTintColor: "#ea580c",
-        tabBarInactiveTintColor: "#94a3b8",
-        tabBarLabelPosition: "below-icon",
-        tabBarStyle: {
-          backgroundColor: "#ffffff",
-          borderTopColor: "#f1f5f9",
-          borderTopWidth: 1,
-          borderTopLeftRadius: 28,
-          borderTopRightRadius: 28,
-          height: 64 + Math.max(insets.bottom, 10),
-          paddingBottom: Math.max(insets.bottom, 10),
-          paddingTop: 8,
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          elevation: 12,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.08,
-          shadowRadius: 10,
-        },
-        tabBarLabelStyle: {
-          fontSize: 13,
-          fontWeight: "600",
-          textAlign: "center",
-          marginTop: 2,
-        },
-        tabBarIconStyle: {
-          alignItems: "center",
-          justifyContent: "center",
-          width: 28,
-          height: 28,
-        },
-        tabBarItemStyle: {
-          alignItems: "center",
-          justifyContent: "center",
-        },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: t("tabs.home"),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "home" : "home-outline"}
@@ -79,7 +122,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="nearby"
         options={{
-          title: "Nearby",
+          title: t("tabs.nearby"),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "navigate-circle" : "navigate-circle-outline"}
@@ -92,7 +135,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="saved"
         options={{
-          title: "Saved",
+          title: t("tabs.saved"),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "heart" : "heart-outline"}
@@ -105,7 +148,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: t("tabs.profile"),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "person-circle" : "person-circle-outline"}

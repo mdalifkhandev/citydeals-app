@@ -11,6 +11,7 @@ import { StatusBar } from "expo-status-bar";
 import { Feather } from "@expo/vector-icons";
 import CurvedHeader from "../../components/CurvedHeader";
 import { useTermsOfUse } from "../../features/legal/hooks/useLegal";
+import { useTranslation } from "react-i18next";
 
 interface Section {
   title?: string;
@@ -18,6 +19,7 @@ interface Section {
 }
 
 export default function TermsOfUseScreen() {
+  const { t } = useTranslation();
   const {
     data: terms,
     isLoading,
@@ -81,7 +83,7 @@ export default function TermsOfUseScreen() {
       <StatusBar style="light" />
 
       {/* Curved Navy Top Header */}
-      <CurvedHeader title={terms?.title || "Terms of Use"} showBackButton />
+      <CurvedHeader title={terms?.title || t("terms.title")} showBackButton />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -117,7 +119,7 @@ export default function TermsOfUseScreen() {
             <View className="py-16 items-center justify-center">
               <ActivityIndicator size="large" color="#ea580c" />
               <Text className="text-neutral-500 text-sm mt-3 font-medium">
-                Loading terms & conditions...
+                {t("terms.loading")}
               </Text>
             </View>
           )}
@@ -129,10 +131,10 @@ export default function TermsOfUseScreen() {
                 <Feather name="alert-circle" size={26} color="#ef4444" />
               </View>
               <Text className="text-neutral-800 font-bold text-base text-center">
-                Unable to load terms
+                {t("terms.error_title")}
               </Text>
               <Text className="text-neutral-500 text-sm text-center mt-1 mb-5">
-                Please check your network connection and try again.
+                {t("terms.error_desc")}
               </Text>
               <TouchableOpacity
                 onPress={() => refetch()}
@@ -140,7 +142,9 @@ export default function TermsOfUseScreen() {
                 activeOpacity={0.8}
               >
                 <Feather name="refresh-cw" size={14} color="#ffffff" />
-                <Text className="text-white font-bold text-sm ml-2">Retry</Text>
+                <Text className="text-white font-bold text-sm ml-2">
+                  {t("common.retry")}
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -149,9 +153,7 @@ export default function TermsOfUseScreen() {
           {!isLoading && !isError && (
             <>
               <Text className="text-neutral-600 text-sm leading-6 mb-6">
-                Please read these terms and conditions carefully before using
-                the CityDeals application. By accessing or using the platform,
-                you agree to be bound by these terms.
+                {t("terms.intro")}
               </Text>
 
               {parsedSections.map((sec, index) => (
@@ -177,10 +179,10 @@ export default function TermsOfUseScreen() {
           </View>
           <View className="flex-1">
             <Text className="text-neutral-900 font-bold text-sm">
-              Questions about our Terms?
+              {t("terms.questions_title")}
             </Text>
             <Text className="text-neutral-500 text-xs mt-0.5">
-              Contact us at support@citydeals.com
+              support@citydeals.com
             </Text>
           </View>
         </View>

@@ -19,6 +19,7 @@ import DealCardSkeleton from "../../components/DealCardSkeleton";
 import { useCoupons, useSavedCoupons, useToggleSaveCoupon } from "../../features/coupons/hooks/useCoupons";
 import { useAuthStore } from "../../features/auth/store/useAuthStore";
 import { useUserLocation } from "../../features/location/hooks/useUserLocation";
+import { useTranslation } from "react-i18next";
 
 interface ProcessedNearbyDeal extends DealItem {
   distanceKm: number | null;
@@ -54,6 +55,7 @@ function formatDistance(distanceKm: number | null): string | undefined {
 }
 
 export default function NearbyScreen() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const isLoggedIn = useAuthStore((state) => state.isAuthenticated);
 
@@ -222,7 +224,7 @@ export default function NearbyScreen() {
 
         <View style={styles.headerContent}>
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>Nearby Deals</Text>
+            <Text style={styles.headerTitle}>{t("nearby.title", "Nearby Deals")}</Text>
             <Text style={styles.headerSubtitle} numberOfLines={1}>
               {isCouponsLoading
                 ? "Locating offers near you..."
@@ -243,7 +245,7 @@ export default function NearbyScreen() {
           >
             <Ionicons name="location-sharp" size={14} color="#ea580c" />
             <Text style={styles.locationBadgeText} numberOfLines={1} ellipsizeMode="tail">
-              {locationName || "Nearby"}
+              {locationName || t("nearby.nearby", "Nearby")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -273,7 +275,7 @@ export default function NearbyScreen() {
                     isSelected ? styles.radiusTextActive : styles.radiusTextInactive,
                   ]}
                 >
-                  {radius}
+                  {radius === "All Nearby" ? t("nearby.all_nearby", "All Nearby") : radius}
                   {coords && count !== undefined ? ` (${count})` : ""}
                 </Text>
               </TouchableOpacity>
@@ -308,10 +310,10 @@ export default function NearbyScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.locationBannerTitle}>
-                  Enable Location for Walking Distance
+                  {t("nearby.enable_location_title", "Enable Location for Walking Distance")}
                 </Text>
                 <Text style={styles.locationBannerSubtitle}>
-                  Tap here to detect your coordinates and calculate exact distances.
+                  {t("nearby.enable_location_subtitle", "Tap here to detect your coordinates and calculate exact distances.")}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
@@ -328,11 +330,10 @@ export default function NearbyScreen() {
                 <Ionicons name="location-outline" size={44} color="#ea580c" />
               </View>
               <Text style={styles.emptyTitle}>
-                No deals within {selectedRadius}
+                {t("nearby.no_deals_within", { radius: selectedRadius })}
               </Text>
               <Text style={styles.emptySubtitle}>
-                There are {processedDeals.length} active{" "}
-                {processedDeals.length === 1 ? "offer" : "offers"} in nearby areas. Expand your radius to view them all.
+                {t("nearby.expand_radius", { count: processedDeals.length })}
               </Text>
               <TouchableOpacity
                 activeOpacity={0.8}
@@ -340,7 +341,7 @@ export default function NearbyScreen() {
                 style={styles.emptyActionButton}
               >
                 <Text style={styles.emptyActionButtonText}>
-                  Show All Nearby Deals ({processedDeals.length})
+                  {t("nearby.show_all_nearby", { count: processedDeals.length })}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -350,16 +351,20 @@ export default function NearbyScreen() {
               <View style={styles.emptyIconContainer}>
                 <Ionicons name="pricetags-outline" size={44} color="#94a3b8" />
               </View>
-              <Text style={styles.emptyTitle}>No nearby deals available</Text>
+              <Text style={styles.emptyTitle}>
+                {t("nearby.no_nearby_deals", "No nearby deals available")}
+              </Text>
               <Text style={styles.emptySubtitle}>
-                Check back soon for new offers from local merchants in this area.
+                {t("nearby.check_back_soon", "Check back soon for new offers from local merchants in this area.")}
               </Text>
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={handleRefresh}
                 style={styles.emptyActionButton}
               >
-                <Text style={styles.emptyActionButtonText}>Refresh Offers</Text>
+                <Text style={styles.emptyActionButtonText}>
+                  {t("nearby.refresh_offers", "Refresh Offers")}
+                </Text>
               </TouchableOpacity>
             </View>
           ) : (

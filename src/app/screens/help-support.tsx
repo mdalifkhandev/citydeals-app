@@ -17,8 +17,10 @@ import PrimaryButton from "../../components/PrimaryButton";
 import { useAuthStore } from "../../features/auth/store/useAuthStore";
 import { supportApi } from "../../features/support/services/supportApi";
 import { handleApiError } from "../../utils/errorHandler";
+import { useTranslation } from "react-i18next";
 
 export default function HelpSupportScreen() {
+  const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
   const isLoggedIn = useAuthStore((state) => state.isAuthenticated);
 
@@ -108,7 +110,7 @@ export default function HelpSupportScreen() {
       <StatusBar style="light" />
 
       {/* Curved Navy Top Header */}
-      <CurvedHeader title="Help & Support" showBackButton />
+      <CurvedHeader title={t("help_support.title")} showBackButton />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -126,27 +128,26 @@ export default function HelpSupportScreen() {
                 <Feather name="headphones" size={18} color="#ea580c" />
               </View>
               <Text className="text-neutral-900 font-extrabold text-lg">
-                Contact Support
+                {t("help_support.contact_support")}
               </Text>
             </View>
 
             <Text className="text-neutral-500 text-sm mb-5 leading-5">
-              Have questions, feedback, or need help with a coupon? Fill out the
-              details below and our team will get back to you shortly.
+              {t("help_support.desc")}
             </Text>
 
             <View className="gap-y-4">
               {/* Full Name Field */}
               <View>
                 <Text className="text-neutral-700 text-sm font-semibold mb-1.5 ml-1">
-                  Full Name <Text className="text-orange-500">*</Text>
+                  {t("help_support.full_name")} <Text className="text-orange-500">*</Text>
                 </Text>
                 <View className="border border-neutral-200 rounded-2xl px-4 py-3 bg-neutral-50/60 flex-row items-center">
                   <Feather name="user" size={18} color="#9ca3af" />
                   <TextInput
                     value={fullName}
                     onChangeText={setFullName}
-                    placeholder="Enter your full name"
+                    placeholder={t("help_support.enter_full_name")}
                     placeholderTextColor="#9ca3af"
                     autoCapitalize="words"
                     returnKeyType="next"
@@ -160,14 +161,14 @@ export default function HelpSupportScreen() {
               {/* Email Address Field */}
               <View>
                 <Text className="text-neutral-700 text-sm font-semibold mb-1.5 ml-1">
-                  Email Address <Text className="text-orange-500">*</Text>
+                  {t("help_support.email_address")} <Text className="text-orange-500">*</Text>
                 </Text>
                 <View className="border border-neutral-200 rounded-2xl px-4 py-3 bg-neutral-50/60 flex-row items-center">
                   <Feather name="mail" size={18} color="#9ca3af" />
                   <TextInput
                     value={email}
                     onChangeText={setEmail}
-                    placeholder="Enter your email address"
+                    placeholder={t("help_support.enter_email")}
                     placeholderTextColor="#9ca3af"
                     keyboardType="email-address"
                     autoCapitalize="none"
@@ -182,14 +183,14 @@ export default function HelpSupportScreen() {
               {/* Subject Field */}
               <View>
                 <Text className="text-neutral-700 text-sm font-semibold mb-1.5 ml-1">
-                  Subject <Text className="text-orange-500">*</Text>
+                  {t("help_support.subject")} <Text className="text-orange-500">*</Text>
                 </Text>
                 <View className="border border-neutral-200 rounded-2xl px-4 py-3 bg-neutral-50/60 flex-row items-center">
                   <Feather name="tag" size={18} color="#9ca3af" />
                   <TextInput
                     value={subject}
                     onChangeText={setSubject}
-                    placeholder="Enter subject"
+                    placeholder={t("help_support.enter_subject")}
                     placeholderTextColor="#9ca3af"
                     autoCapitalize="sentences"
                     returnKeyType="next"
@@ -203,7 +204,7 @@ export default function HelpSupportScreen() {
               {/* Message / Description Field */}
               <View>
                 <Text className="text-neutral-700 text-sm font-semibold mb-1.5 ml-1">
-                  Message <Text className="text-orange-500">*</Text>
+                  {t("help_support.message")} <Text className="text-orange-500">*</Text>
                 </Text>
                 <View className="border border-neutral-200 rounded-2xl px-4 pt-3.5 pb-2.5 bg-neutral-50/60 min-h-[140px]">
                   <TextInput
@@ -214,7 +215,7 @@ export default function HelpSupportScreen() {
                       }
                     }}
                     maxLength={MAX_MESSAGE_LENGTH}
-                    placeholder="Describe your issue or question in detail..."
+                    placeholder={t("help_support.message_placeholder")}
                     placeholderTextColor="#9ca3af"
                     multiline
                     textAlignVertical="top"
@@ -241,7 +242,7 @@ export default function HelpSupportScreen() {
             {/* Submit CTA Button */}
             <View className="mt-7">
               <PrimaryButton
-                title={isSubmitting ? "Sending..." : "Send Message"}
+                title={isSubmitting ? t("help_support.sending") : t("help_support.send_message")}
                 onPress={handleSubmit}
                 loading={isSubmitting}
                 disabled={isSubmitting}
@@ -257,7 +258,7 @@ export default function HelpSupportScreen() {
               </View>
               <View className="flex-1">
                 <Text className="text-neutral-900 font-bold text-sm">
-                  Direct Email Support
+                  {t("help_support.direct_email_support")}
                 </Text>
                 <Text className="text-neutral-500 text-xs mt-0.5">
                   support@citydeals.com
@@ -271,10 +272,10 @@ export default function HelpSupportScreen() {
               </View>
               <View className="flex-1">
                 <Text className="text-neutral-900 font-bold text-sm">
-                  Operating Hours
+                  {t("help_support.operating_hours")}
                 </Text>
                 <Text className="text-neutral-500 text-xs mt-0.5">
-                  Mon – Fri, 9:00 AM – 6:00 PM (Response within 24h)
+                  {t("help_support.operating_hours_desc")}
                 </Text>
               </View>
             </View>

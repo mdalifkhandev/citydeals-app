@@ -37,6 +37,13 @@ export const authApi = {
     return data?.data || data;
   },
 
+  updateLanguage: async (preferredLanguage: string): Promise<User> => {
+    const { data } = await apiClient.patch<any>(ENDPOINTS.USERS.LANGUAGE, {
+      preferredLanguage,
+    });
+    return data?.data || data;
+  },
+
   forgotPassword: async (email: string): Promise<{ success: boolean; message: string; otp?: string }> => {
     const { data } = await apiClient.post(ENDPOINTS.AUTH.FORGOT_PASSWORD, { email });
     return data?.data || data;

@@ -27,10 +27,12 @@ import {
   shareCouponWithSystemSheet,
   shareToSocialPlatform,
 } from "../../utils/shareUtils";
+import { useTranslation } from "react-i18next";
 
 const fallbackPlaceholder = require("../../../assets/images/placeholder-deal.jpg");
 
 export default function CouponDetailsScreen() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const isLoggedIn = useAuthStore((state) => state.isAuthenticated);
@@ -319,29 +321,30 @@ function ensureHttps(url?: string | null): string | null {
     if (coupon?.expiresAt) {
       try {
         const d = new Date(coupon.expiresAt);
-        return `Valid until ${d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+        const dateStr = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+        return t("coupon_details.valid_until", { date: dateStr, defaultValue: `Valid until ${dateStr}` });
       } catch {
-        return "Limited time offer";
+        return t("coupon_details.limited_time", "Limited time offer");
       }
     }
-    return "Ongoing Deal";
-  }, [coupon?.expiresAt]);
+    return t("coupon_details.ongoing_deal", "Ongoing Deal");
+  }, [coupon?.expiresAt, t]);
 
   const frequencyLabel = useMemo(() => {
-    if (!coupon?.redemptionFrequency) return "Single Use";
+    if (!coupon?.redemptionFrequency) return t("coupon_details.single_use", "Single Use");
     switch (coupon.redemptionFrequency) {
       case "ONE_TIME":
-        return "Single Use Only";
+        return t("coupon_details.single_use", "Single Use Only");
       case "DAILY":
-        return "Once Daily";
+        return t("coupon_details.once_daily", "Once Daily");
       case "WEEKLY":
-        return "Once Weekly";
+        return t("coupon_details.once_weekly", "Once Weekly");
       case "UNLIMITED":
-        return "Unlimited Use";
+        return t("coupon_details.unlimited_use", "Unlimited Use");
       default:
         return coupon.redemptionFrequency;
     }
-  }, [coupon?.redemptionFrequency]);
+  }, [coupon?.redemptionFrequency, t]);
 
   return (
     <View className="flex-1 bg-white">
@@ -375,7 +378,9 @@ function ensureHttps(url?: string | null): string | null {
           <Feather name="arrow-left" size={20} color="#1e293b" />
         </TouchableOpacity>
 
-        <Text className="text-white text-lg font-bold z-10">Coupon Details</Text>
+        <Text className="text-white text-lg font-bold z-10">
+          {t("coupon_details.title", "Coupon Details")}
+        </Text>
 
         <TouchableOpacity
           activeOpacity={0.8}
@@ -493,7 +498,7 @@ function ensureHttps(url?: string | null): string | null {
                   style={{ color: "#ffffff" }}
                   className="text-white text-base font-bold tracking-wide"
                 >
-                  {isRedeemed ? "View Redeemed Code" : "Redeem Coupon"}
+                  {isRedeemed ? t("coupon_details.already_redeemed", "Coupon Already Redeemed") : t("coupon_details.redeem_coupon", "Redeem Coupon")}
                 </Text>
               </>
             )}
@@ -523,7 +528,7 @@ function ensureHttps(url?: string | null): string | null {
                   style={{ color: isSaved ? "#ea580c" : "#ffffff" }}
                   className="text-base font-bold"
                 >
-                  {isSaved ? "Coupon Saved" : "Save coupon"}
+                  {isSaved ? t("coupon_details.coupon_saved", "Coupon Saved") : t("coupon_details.save_coupon", "Save coupon")}
                 </Text>
               </>
             )}
@@ -552,7 +557,7 @@ function ensureHttps(url?: string | null): string | null {
               className="flex-row items-center gap-1.5 rounded-xl px-3.5 py-2.5 active:bg-neutral-800"
             >
               <Ionicons name="navigate-outline" size={15} color="#ffffff" />
-              <Text className="text-white text-xs font-semibold">Directions</Text>
+              <Text className="text-white text-xs font-semibold">{t("coupon_details.directions", "Directions")}</Text>
             </TouchableOpacity>
           </View>
 
@@ -560,7 +565,7 @@ function ensureHttps(url?: string | null): string | null {
           {coupon?.terms && (
             <View className="mb-5 rounded-2xl bg-neutral-50 p-4 border border-neutral-200">
               <Text className="text-xs font-bold text-neutral-800 uppercase tracking-wider mb-1">
-                Terms & Conditions
+                {t("coupon_details.terms_conditions", "Terms & Conditions")}
               </Text>
               <Text className="text-xs text-neutral-600 leading-5">
                 {coupon.terms}
@@ -580,7 +585,7 @@ function ensureHttps(url?: string | null): string | null {
               className="flex-1 flex-row items-center justify-center gap-2 rounded-2xl py-3.5 active:bg-neutral-800 shadow-sm"
             >
               <Ionicons name="globe-outline" size={18} color="#ffffff" />
-              <Text className="text-white text-sm font-semibold">Website</Text>
+              <Text className="text-white text-sm font-semibold">{t("coupon_details.website", "Website")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.85}
@@ -589,7 +594,7 @@ function ensureHttps(url?: string | null): string | null {
               className="flex-1 flex-row items-center justify-center gap-2 rounded-2xl py-3.5 active:bg-neutral-800 shadow-sm"
             >
               <Ionicons name="mail-outline" size={18} color="#ffffff" />
-              <Text className="text-white text-sm font-semibold">Email</Text>
+              <Text className="text-white text-sm font-semibold">{t("coupon_details.email", "Email")}</Text>
             </TouchableOpacity>
           </View>
 
@@ -660,10 +665,10 @@ function ensureHttps(url?: string | null): string | null {
             </View>
 
             <Text className="text-xl font-extrabold text-neutral-900 text-center tracking-tight">
-              Sign In to Continue
+              {t("coupon_details.sign_in_continue", "Sign In to Continue")}
             </Text>
             <Text className="text-neutral-500 text-sm text-center mt-2 leading-5">
-              You are currently browsing as a guest. Please sign in or create an account to redeem and save deals.
+              {t("coupon_details.guest_prompt", "You are currently browsing as a guest. Please sign in or create an account to redeem and save deals.")}
             </Text>
 
             <View className="w-full gap-y-2.5 mt-6">
@@ -676,7 +681,7 @@ function ensureHttps(url?: string | null): string | null {
                 style={{ backgroundColor: "#ea580c" }}
                 className="w-full rounded-2xl py-3.5 items-center justify-center shadow-sm"
               >
-                <Text style={{ color: "#ffffff" }} className="text-white font-bold text-base">Sign In</Text>
+                <Text style={{ color: "#ffffff" }} className="text-white font-bold text-base">{t("profile.sign_in", "Sign In")}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -688,7 +693,7 @@ function ensureHttps(url?: string | null): string | null {
                 className="w-full bg-neutral-100 rounded-2xl py-3.5 items-center justify-center border border-neutral-200"
               >
                 <Text className="text-neutral-800 font-bold text-sm">
-                  Create Free Account
+                  {t("coupon_details.create_free_account", "Create Free Account")}
                 </Text>
               </TouchableOpacity>
 
@@ -698,7 +703,7 @@ function ensureHttps(url?: string | null): string | null {
                 className="w-full py-2 items-center justify-center mt-1"
               >
                 <Text className="text-neutral-500 font-semibold text-sm">
-                  Keep Browsing
+                  {t("coupon_details.keep_browsing", "Keep Browsing")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -743,10 +748,10 @@ function ensureHttps(url?: string | null): string | null {
               </View>
 
               <Text className="text-2xl font-extrabold text-neutral-900 text-center tracking-tight">
-                Ready to Redeem!
+                {t("coupon_details.ready_to_redeem", "Ready to Redeem!")}
               </Text>
               <Text className="text-neutral-500 text-sm text-center mt-1">
-                Present this coupon code or QR to the cashier at checkout.
+                {t("coupon_details.present_to_cashier", "Present this coupon code or QR to the cashier at checkout.")}
               </Text>
 
               {/* QR Code Container */}
@@ -795,7 +800,7 @@ function ensureHttps(url?: string | null): string | null {
                 style={{ backgroundColor: "#0f172a" }}
                 className="w-full rounded-2xl py-4 items-center justify-center mt-6 shadow-sm"
               >
-                <Text style={{ color: "#ffffff" }} className="text-white font-bold text-base">Done</Text>
+                <Text style={{ color: "#ffffff" }} className="text-white font-bold text-base">{t("common.done", "Done")}</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>

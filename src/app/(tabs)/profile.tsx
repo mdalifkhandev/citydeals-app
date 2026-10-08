@@ -1,7 +1,7 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Modal,
   RefreshControl,
@@ -20,6 +20,8 @@ import { useCurrentUser } from "../../features/auth/hooks/useCurrentUser";
 import { useSavedCoupons, useRedeemedCoupons } from "../../features/coupons/hooks/useCoupons";
 import { useShallow } from "zustand/react/shallow";
 import { useUpdateNotificationSettings } from "../../features/notifications/hooks/useNotifications";
+import { useTranslation } from "react-i18next";
+import { LANGUAGES } from "../../components/LanguageBottomSheet";
 
 
 export default function ProfileScreen() {
@@ -46,8 +48,13 @@ export default function ProfileScreen() {
 
   const { logoutMutation } = useAuthMutations();
   const { mutate: updateNotificationSettings } = useUpdateNotificationSettings();
-  
-  const [selectedLanguage, setSelectedLanguage] = useState("English");
+  const { t, i18n } = useTranslation();
+
+  const currentLangLabel = useMemo(() => {
+    const found = LANGUAGES.find((l) => l.id === (i18n.language?.slice(0, 2) || "en"));
+    return found?.label || "English";
+  }, [i18n.language]);
+
   const [isLanguageSheetOpen, setIsLanguageSheetOpen] = useState(false);
   const [isRedeemedModalOpen, setIsRedeemedModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -89,19 +96,19 @@ export default function ProfileScreen() {
       : "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80";
 
   const displayName = isLoggedIn
-    ? user?.fullName || "Valued Member"
-    : "Guest User";
+    ? user?.fullName || t("profile.valued_member")
+    : t("profile.guest_user");
 
   const displaySubtitle = isLoggedIn
     ? user?.email || "Account Active"
-    : "Browsing as guest";
+    : t("profile.browsing_as_guest");
 
   return (
     <View className="flex-1 bg-neutral-50">
       <StatusBar style="light" />
 
       {/* Reusable Curved Header */}
-      <CurvedHeader title="Profile" />
+      <CurvedHeader title={t("profile.title")} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -126,7 +133,7 @@ export default function ProfileScreen() {
             />
             <View className="ml-3.5 flex-1">
               <Text className="text-neutral-500 text-sm font-normal">
-                {isLoggedIn ? "Welcome back," : "Browsing as"}
+                {isLoggedIn ? t("profile.welcome_back") : t("profile.browsing_as")}
               </Text>
               <Text className="text-neutral-900 font-bold text-lg mt-0.5" numberOfLines={1}>
                 {displayName}
@@ -143,7 +150,7 @@ export default function ProfileScreen() {
                 className="bg-orange-50 border border-orange-200 px-3.5 py-2 rounded-2xl"
               >
                 <Text className="text-orange-600 font-bold text-sm">
-                  Sign In
+                  {t("profile.sign_in")}
                 </Text>
               </TouchableOpacity>
             )}
@@ -177,7 +184,7 @@ export default function ProfileScreen() {
               </View>
               <View className="flex-row items-center justify-between mt-2">
                 <Text className="text-neutral-600 text-sm font-semibold">
-                  Save coupons
+                  {t("profile.saved_coupons")}
                 </Text>
                 <Feather name="chevron-right" size={14} color="#9ca3af" />
               </View>
@@ -209,7 +216,7 @@ export default function ProfileScreen() {
               </View>
               <View className="flex-row items-center justify-between mt-2">
                 <Text className="text-neutral-600 text-sm font-semibold">
-                  Coupon redeemed
+                  {t("profile.coupon_redeemed")}
                 </Text>
                 <Feather name="chevron-right" size={14} color="#9ca3af" />
               </View>
@@ -219,7 +226,7 @@ export default function ProfileScreen() {
 
         {/* General Section */}
         <Text className="text-neutral-900 font-bold text-lg px-5 mt-6 mb-3">
-          General
+          {t("profile.general")}
         </Text>
 
         {/* Menu Items */}
@@ -239,7 +246,7 @@ export default function ProfileScreen() {
             <View className="flex-row items-center flex-1">
               <Feather name="user" size={20} color="#ea580c" />
               <Text className="text-neutral-800 font-semibold text-base ml-3.5">
-                Account Info
+                {t("profile.account_info")}
               </Text>
             </View>
             <Feather name="chevron-right" size={20} color="#9ca3af" />
@@ -260,7 +267,7 @@ export default function ProfileScreen() {
             <View className="flex-row items-center flex-1">
               <Feather name="lock" size={20} color="#ea580c" />
               <Text className="text-neutral-800 font-semibold text-base ml-3.5">
-                Change password
+                {t("profile.change_password")}
               </Text>
             </View>
             <Feather name="chevron-right" size={20} color="#9ca3af" />
@@ -301,12 +308,12 @@ export default function ProfileScreen() {
                 color="#ea580c"
               />
               <Text className="text-neutral-800 font-semibold text-base ml-3.5">
-                Language
+                {t("profile.language")}
               </Text>
             </View>
             <View className="flex-row items-center">
               <Text className="text-neutral-500 text-sm font-medium mr-2">
-                {selectedLanguage}
+                {currentLangLabel}
               </Text>
               <Feather name="chevron-right" size={20} color="#9ca3af" />
             </View>
@@ -321,7 +328,7 @@ export default function ProfileScreen() {
             <View className="flex-row items-center flex-1">
               <Feather name="shield" size={20} color="#ea580c" />
               <Text className="text-neutral-800 font-semibold text-base ml-3.5">
-                Help & Support
+                {t("profile.help_support")}
               </Text>
             </View>
             <Feather name="chevron-right" size={20} color="#9ca3af" />
@@ -336,7 +343,7 @@ export default function ProfileScreen() {
             <View className="flex-row items-center flex-1">
               <Feather name="file-text" size={20} color="#ea580c" />
               <Text className="text-neutral-800 font-semibold text-base ml-3.5">
-                Terms of Use
+                {t("profile.terms_of_use")}
               </Text>
             </View>
             <Feather name="chevron-right" size={20} color="#9ca3af" />
@@ -351,7 +358,9 @@ export default function ProfileScreen() {
             className="bg-red-50 border border-red-100/80 rounded-2xl py-4 flex-row items-center justify-center mx-4 mt-5 active:bg-red-100"
           >
             <Feather name="log-out" size={20} color="#ef4444" />
-            <Text className="text-red-500 font-bold text-base ml-2">Log Out</Text>
+            <Text className="text-red-500 font-bold text-base ml-2">
+              {t("profile.log_out")}
+            </Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
@@ -361,7 +370,7 @@ export default function ProfileScreen() {
           >
             <Feather name="log-in" size={20} color="#ffffff" />
             <Text className="text-white font-bold text-base ml-2">
-              Sign In / Register
+              {t("profile.sign_in_register")}
             </Text>
           </TouchableOpacity>
         )}
@@ -381,7 +390,7 @@ export default function ProfileScreen() {
           <View className="bg-white px-5 pt-5 pb-4 border-b border-neutral-100 flex-row items-center justify-between">
             <View>
               <Text className="text-xl font-extrabold text-neutral-900">
-                Redeemed Coupons
+                {t("profile.redeemed_coupons_title")}
               </Text>
               <Text className="text-neutral-500 text-xs mt-0.5">
                 {redeemedCoupons.length} {redeemedCoupons.length === 1 ? "offer" : "offers"} redeemed in total
@@ -407,7 +416,7 @@ export default function ProfileScreen() {
                   <Ionicons name="ticket-outline" size={40} color="#ea580c" />
                 </View>
                 <Text className="text-lg font-bold text-neutral-900 text-center">
-                  No Redeemed Coupons Yet
+                  {t("profile.no_redeemed_coupons")}
                 </Text>
                 <Text className="text-neutral-500 text-sm text-center mt-1.5 leading-5">
                   When you claim and redeem coupons at local merchants, they will appear here in your redemption history.
@@ -487,8 +496,7 @@ export default function ProfileScreen() {
       <LanguageBottomSheet
         isPresented={isLanguageSheetOpen}
         onDismiss={() => setIsLanguageSheetOpen(false)}
-        selectedLanguage={selectedLanguage}
-        onSaveLanguage={(lang) => setSelectedLanguage(lang)}
+        selectedLanguage={i18n.language || "en"}
       />
     </View>
   );

@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather, Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 interface EmptyDealsStateProps {
   query?: string;
@@ -15,6 +16,8 @@ export default function EmptyDealsState({
   onClearFilters,
   onSwitchArea,
 }: EmptyDealsStateProps) {
+  const { t } = useTranslation();
+
   const getSubtitle = () => {
     if (query && query.trim().length > 0) {
       return `We couldn't find any deals matching "${query}". Try searching with different keywords.`;
@@ -22,7 +25,7 @@ export default function EmptyDealsState({
     if (areaName && areaName !== "All Areas") {
       return `There are currently no active deals in ${areaName}. Try switching to another area or view deals across all regions.`;
     }
-    return "There are currently no deals available for this selection. Please check back soon!";
+    return t("home.no_deals_desc", "There are currently no deals available for this selection. Please check back soon!");
   };
 
   return (
@@ -34,7 +37,7 @@ export default function EmptyDealsState({
 
       {/* Heading */}
       <Text className="text-neutral-900 font-bold text-lg text-center">
-        No Deals Found
+        {t("home.no_deals_found", "No Deals Found")}
       </Text>
 
       {/* Subtitle / Description */}
@@ -52,7 +55,7 @@ export default function EmptyDealsState({
           >
             <Ionicons name="location-outline" size={16} color="#ea580c" />
             <Text className="text-neutral-700 font-bold text-sm ml-1.5">
-              Change Area
+              {t("home.change_area", "Change Area")}
             </Text>
           </TouchableOpacity>
         )}
@@ -64,7 +67,7 @@ export default function EmptyDealsState({
             className="bg-orange-50 border border-orange-200 px-5 py-3 rounded-full active:bg-orange-100"
           >
             <Text className="text-orange-600 font-bold text-sm">
-              Clear All Filters
+              {t("home.clear_all_filters", "Clear All Filters")}
             </Text>
           </TouchableOpacity>
         )}

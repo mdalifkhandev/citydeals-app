@@ -12,6 +12,7 @@ import { useAreas, AreaItem } from "../features/areas";
 import { useLocationStore } from "../features/location/store/useLocationStore";
 import { locationService } from "../features/location/services/locationService";
 import { toast } from "sonner-native";
+import { useTranslation } from "react-i18next";
 
 interface AreaSelectorModalProps {
   isVisible: boolean;
@@ -22,6 +23,7 @@ export default function AreaSelectorModal({
   isVisible,
   onClose,
 }: AreaSelectorModalProps) {
+  const { t } = useTranslation();
   const { data: areas = [], isLoading: isAreasLoading } = useAreas();
   const { selectedArea, isAutoDetect, setSelectedArea, enableAutoDetect } =
     useLocationStore();
@@ -67,10 +69,10 @@ export default function AreaSelectorModal({
         <View className="flex-row items-center justify-between pb-3 border-b border-neutral-100">
           <View>
             <Text className="text-xl font-bold text-neutral-900">
-              Select Your Area
+              {t("area_modal.title", "Select Your Area")}
             </Text>
             <Text className="text-sm text-neutral-500 mt-0.5">
-              Explore deals and discounts in your city
+              {t("area_modal.subtitle", "Explore deals and discounts in your city")}
             </Text>
           </View>
           <TouchableOpacity
@@ -115,18 +117,18 @@ export default function AreaSelectorModal({
                     isAutoDetect ? "text-orange-900" : "text-neutral-900"
                   }`}
                 >
-                  Use My Current Location
+                  {t("area_modal.use_current_location", "Use My Current Location")}
                 </Text>
                 {isAutoDetect && (
                   <View className="bg-orange-200/80 px-2 py-0.5 rounded-full ml-2">
                     <Text className="text-[10px] font-bold text-orange-800 uppercase">
-                      Active GPS
+                      {t("area_modal.active_gps", "Active GPS")}
                     </Text>
                   </View>
                 )}
               </View>
               <Text className="text-xs text-neutral-500 mt-0.5">
-                Automatically finds nearest deals around you
+                {t("area_modal.gps_desc", "Automatically finds nearest deals around you")}
               </Text>
             </View>
             {isAutoDetect && (
@@ -165,10 +167,10 @@ export default function AreaSelectorModal({
                     : "text-neutral-900"
                 }`}
               >
-                All Cities & Areas
+                {t("area_modal.all_cities", "All Cities & Areas")}
               </Text>
               <Text className="text-xs text-neutral-500 mt-0.5">
-                Show deals across all regions
+                {t("area_modal.all_cities_desc", "Show deals across all regions")}
               </Text>
             </View>
             {isAllSelected && !isAutoDetect && (
@@ -180,7 +182,7 @@ export default function AreaSelectorModal({
           <View className="flex-row items-center my-1">
             <View className="flex-1 h-[1px] bg-neutral-200" />
             <Text className="text-xs font-semibold text-neutral-400 mx-3 uppercase tracking-wider">
-              Available Cities
+              {t("area_modal.available_areas", "Available Areas")}
             </Text>
             <View className="flex-1 h-[1px] bg-neutral-200" />
           </View>
@@ -190,7 +192,7 @@ export default function AreaSelectorModal({
             <View className="py-6 items-center justify-center">
               <ActivityIndicator size="small" color="#ea580c" />
               <Text className="text-neutral-400 text-xs mt-2">
-                Loading available cities...
+                {t("common.loading", "Loading available cities...")}
               </Text>
             </View>
           ) : (

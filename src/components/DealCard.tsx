@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import PrimaryButton from "./PrimaryButton";
+import { useTranslation } from "react-i18next";
 
 import { useAuthStore } from "../features/auth/store/useAuthStore";
 
@@ -33,6 +34,7 @@ export default function DealCard({
   onPressOpen,
   onToggleFavorite,
 }: DealCardProps) {
+  const { t } = useTranslation();
   const [favorite, setFavorite] = useState(deal.isFavorite ?? false);
 
   useEffect(() => {
@@ -140,7 +142,7 @@ export default function DealCard({
 
       {/* Action CTA Button */}
       <PrimaryButton
-        title="Open"
+        title={t("common.open", "Open")}
         onPress={() => onPressOpen?.(deal)}
         className="mt-3.5"
       />

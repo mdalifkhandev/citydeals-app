@@ -18,8 +18,10 @@ import PrimaryButton from "../../components/PrimaryButton";
 import { useAuthStore } from "../../features/auth/store/useAuthStore";
 import { useSavedCoupons, useToggleSaveCoupon } from "../../features/coupons/hooks/useCoupons";
 import { toast } from "sonner-native";
+import { useTranslation } from "react-i18next";
 
 export default function SavedScreen() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const isLoggedIn = useAuthStore((state) => state.isAuthenticated);
 
@@ -59,8 +61,8 @@ export default function SavedScreen() {
 
   const handleToggleFavorite = (toggledDeal: DealItem) => {
     if (!isLoggedIn) {
-      toast.info("Sign In Required", {
-        description: "Please sign in to manage your saved deals.",
+      toast.info(t("saved.sign_in_required", "Sign In Required"), {
+        description: t("saved.manage_saved_signin", "Please sign in to manage your saved deals."),
       });
       return;
     }
@@ -89,15 +91,15 @@ export default function SavedScreen() {
 
         <View style={styles.headerContent}>
           <View>
-            <Text style={styles.headerTitle}>Saved Coupons</Text>
+            <Text style={styles.headerTitle}>{t("saved.title", "Saved Coupons")}</Text>
             <Text style={styles.headerSubtitle}>
-              {savedDeals.length} {savedDeals.length === 1 ? "deal" : "deals"} saved for later
+              {t("saved.deals_saved", { count: savedDeals.length })}
             </Text>
           </View>
 
           <View style={styles.badge}>
             <Ionicons name="heart" size={16} color="#ea580c" />
-            <Text style={styles.badgeText}>{savedDeals.length} Saved</Text>
+            <Text style={styles.badgeText}>{t("saved.saved_badge", { count: savedDeals.length })}</Text>
           </View>
         </View>
       </View>
@@ -122,12 +124,12 @@ export default function SavedScreen() {
               style={styles.emptyImage}
               resizeMode="contain"
             />
-            <Text style={styles.emptyTitle}>Sign In to View Saved Deals</Text>
+            <Text style={styles.emptyTitle}>{t("saved.sign_in_title", "Sign In to View Saved Deals")}</Text>
             <Text style={styles.emptySubtitle}>
-              Sign in to your CityDeals account to view and redeem your saved coupons across all devices.
+              {t("saved.sign_in_subtitle", "Sign in to your CityDeals account to view and redeem your saved coupons across all devices.")}
             </Text>
             <PrimaryButton
-              title="Sign In Now"
+              title={t("saved.sign_in_now", "Sign In Now")}
               onPress={handleSignIn}
               className="mt-6 w-full max-w-xs"
             />
@@ -135,7 +137,7 @@ export default function SavedScreen() {
         ) : isLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#ea580c" />
-            <Text style={styles.loadingText}>Loading your saved coupons...</Text>
+            <Text style={styles.loadingText}>{t("saved.loading", "Loading your saved coupons...")}</Text>
           </View>
         ) : savedDeals.length > 0 ? (
           <View style={styles.feedContainer}>
@@ -155,12 +157,12 @@ export default function SavedScreen() {
               style={styles.emptyImage}
               resizeMode="contain"
             />
-            <Text style={styles.emptyTitle}>No Saved Deals Yet</Text>
+            <Text style={styles.emptyTitle}>{t("saved.no_saved_title", "No Saved Deals Yet")}</Text>
             <Text style={styles.emptySubtitle}>
-              Tap the heart icon on any deal from the Home tab or Coupon Details to save and access them anytime here.
+              {t("saved.no_saved_subtitle", "Tap the heart icon on any deal from the Home tab or Coupon Details to save and access them anytime here.")}
             </Text>
             <PrimaryButton
-              title="Explore Deals"
+              title={t("saved.explore_deals", "Explore Deals")}
               onPress={handleExploreDeals}
               className="mt-6 w-full max-w-xs"
             />

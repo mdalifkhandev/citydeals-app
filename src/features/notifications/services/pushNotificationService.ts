@@ -15,12 +15,25 @@ Notifications.setNotificationHandler({
   }),
 });
 
+let cachedPushToken: string | null = null;
+let isPushConfiguredOnDevice = true;
+
 /**
  * Register for push notifications and return the Expo push token
  */
 export async function registerForPushNotificationsAsync(): Promise<
   string | null
 > {
+  // If already fetched, return cached token
+  if (cachedPushToken) {
+    return cachedPushToken;
+  }
+
+  // If already determined that push/Firebase is unconfigured, avoid repeated failing calls
+  if (!isPushConfiguredOnDevice) {
+    return null;
+  }
+
   // Push notifications only work on physical devices
   if (!Device.isDevice) {
     console.log("[PUSH] Must use physical device for push notifications");
@@ -50,7 +63,6 @@ export async function registerForPushNotificationsAsync(): Promise<
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: "#ea580c",
-      sound: "default",
     });
 
     await Notifications.setNotificationChannelAsync("deals", {
@@ -59,19 +71,36 @@ export async function registerForPushNotificationsAsync(): Promise<
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: "#ea580c",
-      sound: "default",
     });
   }
 
   try {
     const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-    const tokenData = await Notifications.getExpoPushTokenAsync({
-      projectId,
-    });
+    if (!projectId) {
+      // In bare workflow / dev client without EAS project configured, Expo Push Tokens require an EAS projectId
+      isPushConfiguredOnDevice = false;
+      console.log("[PUSH] EAS 'projectId' not configured in app config. Push token registration skipped for this session.");
+      return null;
+    }
+
+    const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
     console.log("[PUSH] Expo push token:", tokenData.data);
+    cachedPushToken = tokenData.data;
     return tokenData.data;
-  } catch (error) {
-    console.warn("[PUSH] Failed to get push token:", error);
+  } catch (error: any) {
+    const errorMessage = error?.message || String(error);
+    if (
+      errorMessage.includes("Firebase") ||
+      errorMessage.includes("googleServicesFile") ||
+      errorMessage.includes("projectId")
+    ) {
+      isPushConfiguredOnDevice = false;
+      console.warn(
+        "[PUSH] Push notifications (FCM/EAS) are not fully configured yet. Push token registration will be skipped for this session."
+      );
+    } else {
+      console.warn("[PUSH] Failed to get push token:", errorMessage);
+    }
     return null;
   }
 }

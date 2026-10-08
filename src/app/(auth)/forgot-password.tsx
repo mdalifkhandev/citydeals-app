@@ -18,8 +18,10 @@ import { toast } from "sonner-native";
 import PrimaryButton from "../../components/PrimaryButton";
 import { authApi } from "../../features/auth/services/authApi";
 import { handleApiError } from "../../utils/errorHandler";
+import { useTranslation } from "react-i18next";
 
 export default function ForgotPasswordScreen() {
+  const { t } = useTranslation();
   const [step, setStep] = useState<"email" | "otp" | "reset">("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -259,17 +261,17 @@ export default function ForgotPasswordScreen() {
           <View className="items-center mb-6">
             <Text className="text-xl font-bold text-neutral-900 tracking-tight">
               {step === "email"
-                ? "Forgot Password?"
+                ? t("forgot_password.title", "Forgot Password?")
                 : step === "otp"
-                  ? "Verify Your Email"
-                  : "Reset Your Password"}
+                  ? t("forgot_password.verify_code", "Verify Your Email")
+                  : t("forgot_password.reset_password", "Reset Your Password")}
             </Text>
             <Text className="text-neutral-500 text-base text-center mt-1.5 max-w-xs">
               {step === "email"
-                ? "Enter your registered email address to receive a 6-digit recovery code."
+                ? t("forgot_password.instructions_email", "Enter your registered email address to receive a 6-digit recovery code.")
                 : step === "otp"
-                  ? `Enter the 6-digit code sent to ${email.trim()}`
-                  : "Enter a new secure password for your account."}
+                  ? `${t("forgot_password.instructions_otp", "Enter the 6-digit code sent to")} ${email.trim()}`
+                  : t("forgot_password.instructions_new_password", "Enter a new secure password for your account.")}
             </Text>
           </View>
 
@@ -278,7 +280,7 @@ export default function ForgotPasswordScreen() {
             <View className="gap-y-4">
               <View>
                 <Text className="text-neutral-700 text-base font-semibold mb-1">
-                  Email
+                  {t("auth.email", "Email")}
                 </Text>
                 <View
                   className={`flex-row items-center border rounded-xl px-3.5 h-12 bg-white ${emailError
@@ -297,7 +299,7 @@ export default function ForgotPasswordScreen() {
                       setEmail(val);
                       if (emailError) setEmailError(false);
                     }}
-                    placeholder="Enter your email"
+                    placeholder={t("auth.enter_email", "Enter your email")}
                     placeholderTextColor="#a3a3a3"
                     keyboardType="email-address"
                     autoCapitalize="none"
@@ -307,13 +309,13 @@ export default function ForgotPasswordScreen() {
                 </View>
                 {emailError && (
                   <Text className="text-red-500 text-xs mt-1 ml-1 font-medium">
-                    Please enter a valid email address
+                    {t("auth.email_required", "Please enter a valid email address")}
                   </Text>
                 )}
               </View>
 
               <PrimaryButton
-                title="Send Code"
+                title={t("forgot_password.send_code", "Send Code")}
                 onPress={handleSendCode}
                 loading={loading}
                 className="mt-2"
@@ -325,8 +327,8 @@ export default function ForgotPasswordScreen() {
                 className="items-center py-2 mt-1"
               >
                 <Text className="text-neutral-600 text-base">
-                  Remember password?{" "}
-                  <Text className="text-orange-600 font-semibold">Log In</Text>
+                  {t("auth.already_have_account", "Remember password?")}{" "}
+                  <Text className="text-orange-600 font-semibold">{t("auth.sign_in", "Log In")}</Text>
                 </Text>
               </TouchableOpacity>
             </View>
@@ -337,7 +339,7 @@ export default function ForgotPasswordScreen() {
             <View className="gap-y-4">
               <View>
                 <Text className="text-neutral-700 text-base font-semibold mb-1">
-                  6-Digit Verification Code
+                  {t("forgot_password.otp_code", "6-Digit Verification Code")}
                 </Text>
                 <View
                   className={`border rounded-xl px-3.5 h-14 bg-white justify-center items-center ${otpError
@@ -360,7 +362,7 @@ export default function ForgotPasswordScreen() {
                 </View>
                 {otpError && (
                   <Text className="text-red-500 text-xs mt-1 ml-1 font-medium">
-                    Please enter the complete 6-digit code
+                    {t("common.required", "Please enter the complete 6-digit code")}
                   </Text>
                 )}
               </View>
@@ -371,7 +373,7 @@ export default function ForgotPasswordScreen() {
                   activeOpacity={0.7}
                 >
                   <Text className="text-neutral-600 text-sm underline">
-                    Change email
+                    {t("common.back", "Change email")}
                   </Text>
                 </TouchableOpacity>
 
@@ -381,13 +383,13 @@ export default function ForgotPasswordScreen() {
                   activeOpacity={0.7}
                 >
                   <Text className="text-orange-600 font-semibold text-sm">
-                    {resending ? "Sending..." : "Resend code"}
+                    {resending ? t("common.loading", "Sending...") : t("forgot_password.resend_code", "Resend code")}
                   </Text>
                 </TouchableOpacity>
               </View>
 
               <PrimaryButton
-                title="Verify Code"
+                title={t("forgot_password.verify_code", "Verify Code")}
                 onPress={handleVerifyOtp}
                 loading={loading}
                 className="mt-2"
@@ -399,8 +401,7 @@ export default function ForgotPasswordScreen() {
                 className="items-center py-2"
               >
                 <Text className="text-neutral-600 text-base">
-                  Back to{" "}
-                  <Text className="text-orange-600 font-semibold">Log In</Text>
+                  {t("forgot_password.back_to_login", "Back to Log In")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -412,7 +413,7 @@ export default function ForgotPasswordScreen() {
               {/* New Password */}
               <View>
                 <Text className="text-neutral-700 text-base font-semibold mb-1">
-                  New Password
+                  {t("change_password.new_password", "New Password")}
                 </Text>
                 <View
                   className={`flex-row items-center border rounded-xl px-3.5 h-12 bg-white ${newPasswordError
@@ -431,7 +432,7 @@ export default function ForgotPasswordScreen() {
                       setNewPassword(val);
                       if (newPasswordError) setNewPasswordError(false);
                     }}
-                    placeholder="At least 6 characters"
+                    placeholder={t("change_password.enter_new_password", "At least 6 characters")}
                     placeholderTextColor="#a3a3a3"
                     secureTextEntry={!showNewPassword}
                     className="flex-1 ml-3 text-neutral-900 text-base h-full"
@@ -457,7 +458,7 @@ export default function ForgotPasswordScreen() {
               {/* Confirm Password */}
               <View>
                 <Text className="text-neutral-700 text-base font-semibold mb-1">
-                  Confirm Password
+                  {t("change_password.confirm_new_password", "Confirm Password")}
                 </Text>
                 <View
                   className={`flex-row items-center border rounded-xl px-3.5 h-12 bg-white ${confirmPasswordError
@@ -476,7 +477,7 @@ export default function ForgotPasswordScreen() {
                       setConfirmPassword(val);
                       if (confirmPasswordError) setConfirmPasswordError(false);
                     }}
-                    placeholder="Re-enter your password"
+                    placeholder={t("change_password.re_enter_new_password", "Re-enter your password")}
                     placeholderTextColor="#a3a3a3"
                     secureTextEntry={!showConfirmPassword}
                     className="flex-1 ml-3 text-neutral-900 text-base h-full"
@@ -500,7 +501,7 @@ export default function ForgotPasswordScreen() {
               </View>
 
               <PrimaryButton
-                title="Reset Password"
+                title={t("forgot_password.update_password", "Reset Password")}
                 onPress={handleResetPassword}
                 loading={loading}
                 className="mt-2"
@@ -512,8 +513,7 @@ export default function ForgotPasswordScreen() {
                 className="items-center py-2"
               >
                 <Text className="text-neutral-600 text-base">
-                  Back to{" "}
-                  <Text className="text-orange-600 font-semibold">Log In</Text>
+                  {t("forgot_password.back_to_login", "Back to Log In")}
                 </Text>
               </TouchableOpacity>
             </View>

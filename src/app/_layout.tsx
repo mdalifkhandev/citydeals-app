@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import AppProviders from "../providers/AppProviders";
 import "../global.css";
+import "../locales";
 
 export default function RootLayout() {
   return (

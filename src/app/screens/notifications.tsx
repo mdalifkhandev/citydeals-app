@@ -14,6 +14,7 @@ import CurvedHeader from "../../components/CurvedHeader";
 import { useNotifications, useMarkAsRead } from "../../features/notifications/hooks/useNotifications";
 import { Notification } from "../../features/notifications/types";
 import { useAuthStore } from "../../features/auth/store/useAuthStore";
+import { useTranslation } from "react-i18next";
 
 /** Human-friendly relative time string */
 function timeAgo(dateStr: string): string {
@@ -106,6 +107,7 @@ function NotificationItem({
 }
 
 export default function NotificationsScreen() {
+  const { t } = useTranslation();
   const isLoggedIn = useAuthStore((state) => state.isAuthenticated);
   const [page, setPage] = useState(1);
   const { data, isLoading, refetch, isFetching } = useNotifications(page, 30);
@@ -145,24 +147,23 @@ export default function NotificationsScreen() {
     return (
       <View className="flex-1 bg-neutral-50">
         <StatusBar style="light" />
-        <CurvedHeader title="Notifications" showBackButton />
+        <CurvedHeader title={t("notifications.title", "Notifications")} showBackButton />
         <View className="flex-1 items-center justify-center px-8">
           <View className="w-20 h-20 rounded-full bg-orange-50 items-center justify-center mb-4">
             <Ionicons name="notifications-off-outline" size={40} color="#ea580c" />
           </View>
           <Text className="text-lg font-bold text-neutral-900 text-center">
-            Sign In to View Notifications
+            {t("notifications.sign_in_title", "Sign In to View Notifications")}
           </Text>
           <Text className="text-neutral-500 text-sm text-center mt-1.5 leading-5">
-            Create an account or sign in to receive deal alerts and
-            notifications.
+            {t("notifications.sign_in_subtitle", "Create an account or sign in to receive deal alerts and notifications.")}
           </Text>
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => router.push("/(auth)/login" as any)}
             className="bg-orange-500 px-6 py-3 rounded-full mt-6"
           >
-            <Text className="text-white font-bold text-sm">Sign In</Text>
+            <Text className="text-white font-bold text-sm">{t("notifications.sign_in", "Sign In")}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -172,7 +173,7 @@ export default function NotificationsScreen() {
   return (
     <View className="flex-1 bg-neutral-50">
       <StatusBar style="light" />
-      <CurvedHeader title="Notifications" showBackButton />
+      <CurvedHeader title={t("notifications.title", "Notifications")} showBackButton />
 
       {/* Unread badge */}
       {unreadCount > 0 && (
@@ -181,7 +182,7 @@ export default function NotificationsScreen() {
             <Text className="text-white text-xs font-bold">{unreadCount}</Text>
           </View>
           <Text className="text-neutral-600 text-sm font-semibold">
-            Unread {unreadCount === 1 ? "notification" : "notifications"}
+            {t("notifications.unread", "Unread")} ({unreadCount})
           </Text>
         </View>
       )}
@@ -190,7 +191,7 @@ export default function NotificationsScreen() {
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#ea580c" />
           <Text className="text-neutral-500 text-sm mt-3">
-            Loading notifications...
+            {t("notifications.loading", "Loading notifications...")}
           </Text>
         </View>
       ) : notifications.length === 0 ? (
@@ -199,11 +200,10 @@ export default function NotificationsScreen() {
             <Ionicons name="notifications-outline" size={40} color="#ea580c" />
           </View>
           <Text className="text-lg font-bold text-neutral-900 text-center">
-            No Notifications Yet
+            {t("notifications.no_notifications_title", "No Notifications Yet")}
           </Text>
           <Text className="text-neutral-500 text-sm text-center mt-1.5 leading-5">
-            When there are new deals nearby or updates on your saved coupons,
-            you'll see them here.
+            {t("notifications.no_notifications_subtitle", "When there are new deals nearby or updates on your saved coupons, you'll see them here.")}
           </Text>
           <TouchableOpacity
             activeOpacity={0.8}
@@ -213,7 +213,7 @@ export default function NotificationsScreen() {
             className="bg-orange-500 px-5 py-2.5 rounded-full mt-6"
           >
             <Text className="text-white font-bold text-sm">
-              Explore Deals
+              {t("notifications.explore_deals", "Explore Deals")}
             </Text>
           </TouchableOpacity>
         </View>

@@ -16,8 +16,10 @@ import CurvedHeader from "../../components/CurvedHeader";
 import PrimaryButton from "../../components/PrimaryButton";
 import { authApi } from "../../features/auth/services/authApi";
 import { useAuthStore } from "../../features/auth/store/useAuthStore";
+import { useTranslation } from "react-i18next";
 
 export default function ChangePasswordScreen() {
+  const { t } = useTranslation();
   const isLoggedIn = useAuthStore((state) => state.isAuthenticated);
 
   const [currentPassword, setCurrentPassword] = useState("");
@@ -92,7 +94,7 @@ export default function ChangePasswordScreen() {
       <StatusBar style="light" />
 
       {/* Curved Navy Header with Back Button */}
-      <CurvedHeader title="Change Password" showBackButton />
+      <CurvedHeader title={t("change_password.title")} showBackButton />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -106,10 +108,10 @@ export default function ChangePasswordScreen() {
           {/* Card Container */}
           <View className="bg-white rounded-3xl p-5 mx-4 mt-6 border border-neutral-100 shadow-sm">
             <Text className="text-neutral-900 font-bold text-lg mb-1">
-              Update Password
+              {t("change_password.heading")}
             </Text>
             <Text className="text-neutral-500 text-sm mb-5 leading-5">
-              Ensure your account is using a secure and strong password.
+              {t("change_password.subheading")}
             </Text>
 
             <View className="gap-y-5">
@@ -120,7 +122,7 @@ export default function ChangePasswordScreen() {
                   <TextInput
                     value={currentPassword}
                     onChangeText={setCurrentPassword}
-                    placeholder="Enter current password"
+                    placeholder={t("change_password.enter_current_password")}
                     placeholderTextColor="#9ca3af"
                     secureTextEntry={!showCurrentPassword}
                     className="flex-1 ml-2.5 text-neutral-900 text-base font-medium py-0"
@@ -139,7 +141,7 @@ export default function ChangePasswordScreen() {
                 </View>
                 <View className="absolute -top-2.5 left-4 bg-white px-1.5 z-10">
                   <Text className="text-neutral-600 text-xs font-semibold">
-                    Current Password
+                    {t("change_password.current_password")}
                   </Text>
                 </View>
               </View>
@@ -151,7 +153,7 @@ export default function ChangePasswordScreen() {
                   <TextInput
                     value={newPassword}
                     onChangeText={setNewPassword}
-                    placeholder="Enter new password (min. 8 characters)"
+                    placeholder={t("change_password.enter_new_password")}
                     placeholderTextColor="#9ca3af"
                     secureTextEntry={!showNewPassword}
                     className="flex-1 ml-2.5 text-neutral-900 text-base font-medium py-0"
@@ -170,7 +172,7 @@ export default function ChangePasswordScreen() {
                 </View>
                 <View className="absolute -top-2.5 left-4 bg-white px-1.5 z-10">
                   <Text className="text-neutral-600 text-xs font-semibold">
-                    New Password
+                    {t("change_password.new_password")}
                   </Text>
                 </View>
               </View>
@@ -182,7 +184,7 @@ export default function ChangePasswordScreen() {
                   <TextInput
                     value={confirmNewPassword}
                     onChangeText={setConfirmNewPassword}
-                    placeholder="Confirm new password"
+                    placeholder={t("change_password.confirm_new_password")}
                     placeholderTextColor="#9ca3af"
                     secureTextEntry={!showConfirmNewPassword}
                     className="flex-1 ml-2.5 text-neutral-900 text-base font-medium py-0"
@@ -203,7 +205,7 @@ export default function ChangePasswordScreen() {
                 </View>
                 <View className="absolute -top-2.5 left-4 bg-white px-1.5 z-10">
                   <Text className="text-neutral-600 text-xs font-semibold">
-                    Confirm New Password
+                    {t("change_password.confirm_new_password")}
                   </Text>
                 </View>
               </View>
@@ -228,7 +230,7 @@ export default function ChangePasswordScreen() {
                       : "text-neutral-500 font-normal"
                   }`}
                 >
-                  Minimum 8 characters long
+                  {t("change_password.req_length")}
                 </Text>
               </View>
 
@@ -258,7 +260,7 @@ export default function ChangePasswordScreen() {
           {/* Change Password CTA Button */}
           <View className="px-4 mt-8">
             <PrimaryButton
-              title="Save Password"
+              title={isSubmitting ? t("change_password.updating") : t("change_password.update_password")}
               onPress={handleChangePassword}
               loading={isSubmitting}
               disabled={isSubmitting}

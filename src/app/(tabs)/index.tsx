@@ -32,11 +32,13 @@ import { useCoupons, useSavedCoupons, useToggleSaveCoupon } from "../../features
 import { useDebounce } from "../../utils/useDebounce";
 import { useShallow } from "zustand/react/shallow";
 import { toast } from "sonner-native";
+import { useTranslation } from "react-i18next";
 
 // Cast to any to bypass AnimatedProps typing bug with FlashListProps
 const AnimatedFlashList = OriginalAnimatedFlashList as any;
 
 export default function HomeScreen() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [selectedCategorySlug, setSelectedCategorySlug] = useState("all");
@@ -82,7 +84,7 @@ export default function HomeScreen() {
     // 1. If user explicitly picked an area (or "All Areas") from the modal:
     if (!isAutoDetect && selectedArea) {
       if (selectedArea.slug === "all") {
-        return "All Areas";
+        return t("home.all_areas", "All Areas");
       }
       if (selectedArea.city && selectedArea.name !== selectedArea.city) {
         return `${selectedArea.name}, ${selectedArea.city}`;
@@ -164,12 +166,12 @@ export default function HomeScreen() {
   } = useCategories();
 
   const categoryList = useMemo(() => {
-    const allItem = { id: "all", name: "All", slug: "all" };
+    const allItem = { id: "all", name: t("home.all", "All"), slug: "all" };
     if (!serverCategories || serverCategories.length === 0) {
       return [allItem];
     }
     return [allItem, ...serverCategories];
-  }, [serverCategories]);
+  }, [serverCategories, t]);
 
   // Fetch live coupons scoped to category from backend
   // Fetch live coupons scoped to category & debounced search from backend
@@ -212,8 +214,8 @@ export default function HomeScreen() {
 
   const handleToggleFavorite = (deal: DealItem, currentFavorite?: boolean) => {
     if (!isLoggedIn) {
-      toast.info("Sign In Required", {
-        description: "Please sign in to save your favorite deals.",
+      toast.info(t("home.sign_in_required", "Sign In Required"), {
+        description: t("home.save_deal_signin", "Please sign in to save your favorite deals."),
       });
       return;
     }
@@ -224,8 +226,8 @@ export default function HomeScreen() {
 
   const handleNotificationPress = () => {
     if (!isLoggedIn) {
-      toast.info("Notifications", {
-        description: "Sign in to receive instant deal alerts in your area.",
+      toast.info(t("notifications.title", "Notifications"), {
+        description: t("home.notifications_signin", "Sign in to receive instant deal alerts in your area."),
       });
       router.push("/(auth)/login" as any);
       return;
@@ -328,8 +330,8 @@ export default function HomeScreen() {
                 {isLoggedIn && user?.fullName
                   ? `Hi, ${user.fullName.trim().split(" ")[0]}`
                   : isAutoDetect
-                  ? "Nearby Area (GPS)"
-                  : "Active Area"}
+                  ? t("home.nearby_gps", "Nearby Area (GPS)")
+                  : t("home.active_area", "Active Area")}
               </Text>
               <View className="flex-row items-center mt-0.5">
                 <Ionicons name="location-sharp" size={16} color="#ea580c" />
@@ -372,7 +374,7 @@ export default function HomeScreen() {
             <TextInput
               value={searchQuery}
               onChangeText={setSearchQuery}
-              placeholder="Search deals, stores, food..."
+              placeholder={t("home.search_placeholder", "Search deals, stores, food...")}
               placeholderTextColor="#9ca3af"
               returnKeyType="search"
               onSubmitEditing={Keyboard.dismiss}
@@ -417,7 +419,7 @@ export default function HomeScreen() {
           <View className="mb-4">
             <View className="flex-row items-center justify-between px-5 mb-3">
               <Text className="text-neutral-900 font-bold text-lg">
-                Browse Categories
+                {t("home.browse_categories", "Browse Categories")}
               </Text>
               {isCategoriesLoading && (
                 <ActivityIndicator size="small" color="#ea580c" />

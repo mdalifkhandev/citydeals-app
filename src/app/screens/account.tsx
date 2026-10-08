@@ -22,8 +22,10 @@ import CurvedHeader from "../../components/CurvedHeader";
 import PrimaryButton from "../../components/PrimaryButton";
 import { useAuthStore } from "../../features/auth/store/useAuthStore";
 import { authApi } from "../../features/auth/services/authApi";
+import { useTranslation } from "react-i18next";
 
 export default function AccountSettingScreen() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
 
@@ -60,8 +62,8 @@ export default function AccountSettingScreen() {
   }, [dateOfBirth]);
 
   const handlePhotoTap = () => {
-    toast.info("Profile Picture", {
-      description: "Avatar is generated automatically from your full name.",
+    toast.info(t("account.photo_title"), {
+      description: t("account.photo_info"),
     });
   };
 
@@ -80,7 +82,7 @@ export default function AccountSettingScreen() {
 
   const handleSaveChange = async () => {
     if (!fullName.trim()) {
-      toast.error("Full name cannot be empty");
+      toast.error(t("account.fullname_required"));
       return;
     }
 
@@ -91,7 +93,7 @@ export default function AccountSettingScreen() {
       if (dateOfBirth.trim().length > 0) {
         const parsed = new Date(dateOfBirth.trim());
         if (isNaN(parsed.getTime())) {
-          toast.error("Please enter a valid date of birth (YYYY-MM-DD)");
+          toast.error(t("account.dob_invalid"));
           setIsSaving(false);
           return;
         }
@@ -109,7 +111,7 @@ export default function AccountSettingScreen() {
       }
 
       queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-      toast.success("Account settings updated successfully!");
+      toast.success(t("account.success_update"));
       router.back();
     } catch (err: any) {
       const msg =
@@ -125,7 +127,7 @@ export default function AccountSettingScreen() {
       <StatusBar style="light" />
 
       {/* Reusable Curved Header with Back Button */}
-      <CurvedHeader title="Account" showBackButton />
+      <CurvedHeader title={t("account.title")} showBackButton />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -159,7 +161,7 @@ export default function AccountSettingScreen() {
               className="mt-2.5"
             >
               <Text className="text-neutral-500 text-sm font-normal">
-                Tap to change photo
+                {t("account.tap_to_change_photo")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -167,7 +169,7 @@ export default function AccountSettingScreen() {
           {/* Personal Information Card */}
           <View className="bg-white rounded-3xl p-5 mx-4 mt-6 border border-neutral-100 shadow-sm">
             <Text className="text-neutral-900 font-bold text-lg mb-4">
-              Personal Information
+              {t("account.personal_info")}
             </Text>
 
             <View className="gap-y-5">
@@ -177,14 +179,14 @@ export default function AccountSettingScreen() {
                   <TextInput
                     value={fullName}
                     onChangeText={setFullName}
-                    placeholder="Full Name"
+                    placeholder={t("account.full_name")}
                     placeholderTextColor="#9ca3af"
                     className="text-neutral-900 text-base font-medium py-0"
                   />
                 </View>
                 <View className="absolute -top-2.5 left-4 bg-white px-1.5 z-10">
                   <Text className="text-neutral-600 text-xs font-semibold">
-                    Full Name
+                    {t("account.full_name")}
                   </Text>
                 </View>
               </View>
@@ -195,7 +197,7 @@ export default function AccountSettingScreen() {
                   <TextInput
                     value={phoneNumber}
                     onChangeText={setPhoneNumber}
-                    placeholder="Phone Number"
+                    placeholder={t("account.phone_number")}
                     placeholderTextColor="#9ca3af"
                     keyboardType="phone-pad"
                     className="text-neutral-900 text-base font-medium py-0"
@@ -203,7 +205,7 @@ export default function AccountSettingScreen() {
                 </View>
                 <View className="absolute -top-2.5 left-4 bg-white px-1.5 z-10">
                   <Text className="text-neutral-600 text-xs font-semibold">
-                    Phone Number
+                    {t("account.phone_number")}
                   </Text>
                 </View>
               </View>
@@ -222,7 +224,7 @@ export default function AccountSettingScreen() {
                 </View>
                 <View className="absolute -top-2.5 left-4 bg-white px-1.5 z-10">
                   <Text className="text-neutral-500 text-xs font-semibold">
-                    Email (Read Only)
+                    {t("account.email_read_only")}
                   </Text>
                 </View>
               </View>
@@ -239,13 +241,13 @@ export default function AccountSettingScreen() {
                       dateOfBirth ? "text-neutral-900" : "text-neutral-400"
                     }`}
                   >
-                    {dateOfBirth || "Select Date of Birth"}
+                    {dateOfBirth || t("account.select_dob")}
                   </Text>
                   <Feather name="calendar" size={18} color="#ea580c" />
                 </TouchableOpacity>
                 <View className="absolute -top-2.5 left-4 bg-white px-1.5 z-10">
                   <Text className="text-neutral-600 text-xs font-semibold">
-                    Date of Birth
+                    {t("account.date_of_birth")}
                   </Text>
                 </View>
               </View>
@@ -255,7 +257,7 @@ export default function AccountSettingScreen() {
           {/* Save Change CTA Button */}
           <View className="px-4 mt-8">
             <PrimaryButton
-              title="Save Changes"
+              title={isSaving ? t("account.saving") : t("account.save_changes")}
               onPress={handleSaveChange}
               loading={isSaving}
               disabled={isSaving}
@@ -287,14 +289,14 @@ export default function AccountSettingScreen() {
             <View className="bg-white rounded-t-3xl p-5 pb-8">
               <View className="flex-row justify-between items-center mb-4">
                 <Text className="text-lg font-bold text-neutral-900">
-                  Select Date of Birth
+                  {t("account.select_dob")}
                 </Text>
                 <TouchableOpacity
                   activeOpacity={0.7}
                   onPress={() => setIsDatePickerOpen(false)}
                 >
                   <Text className="text-base font-bold text-orange-600">
-                    Done
+                    {t("common.done")}
                   </Text>
                 </TouchableOpacity>
               </View>

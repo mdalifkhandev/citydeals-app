@@ -3,6 +3,8 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { I18nextProvider } from "react-i18next";
+import i18n from "../locales";
 import { useUserLocation } from "../features/location/hooks/useUserLocation";
 import { tokenService } from "../features/auth/services/tokenService";
 
@@ -40,14 +42,17 @@ export default function AppProviders({ children }: AppProvidersProps) {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <QueryClientProvider client={queryClient}>
-          <AuthInitializer />
-          <LocationInitializer />
-          <NotificationInitializer />
-          {children}
-          <Toaster />
-        </QueryClientProvider>
+        <I18nextProvider i18n={i18n}>
+          <QueryClientProvider client={queryClient}>
+            <AuthInitializer />
+            <LocationInitializer />
+            <NotificationInitializer />
+            {children}
+            <Toaster />
+          </QueryClientProvider>
+        </I18nextProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
+
