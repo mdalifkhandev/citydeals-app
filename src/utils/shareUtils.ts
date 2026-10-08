@@ -4,12 +4,38 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { ImageSourcePropType, Linking, Platform, Share as RNNativeShare } from "react-native";
 import RNShare, { Social } from "react-native-share";
+import { apiClient } from "../api/client";
 
 export interface ShareCouponOptions {
   dealHeading: string;
   dealDescription: string;
   dealUrl: string;
   imageSource: ImageSourcePropType | string;
+  shareSlug?: string;
+}
+
+function getShareSlug(options: ShareCouponOptions): string | null {
+  if (options.shareSlug) return options.shareSlug;
+  const match = options.dealUrl.match(/(?:\/c\/|\/deals\/|\/coupons\/public\/)([^/?#]+)/);
+  return match?.[1] || null;
+}
+
+export async function trackCouponShare(
+  options: ShareCouponOptions,
+  channel: string,
+  eventType: "SHARE" | "OPEN" = "SHARE"
+): Promise<void> {
+  const shareSlug = getShareSlug(options);
+  if (!shareSlug) return;
+
+  try {
+    await apiClient.post(`/c/${shareSlug}/track`, {
+      channel,
+      eventType,
+    });
+  } catch (error) {
+    console.warn("Failed to track coupon share:", error);
+  }
 }
 
 /**
@@ -68,6 +94,7 @@ export async function shareCouponWithSystemSheet(
   const shareMessage = `🔥 Special Offer on CityDeals!\n\n🏷️ ${dealHeading}\n${dealDescription}\n\n👉 Get coupon: ${dealUrl}`;
 
   try {
+    await trackCouponShare(options, "SYSTEM");
     const localUri = await resolveImageLocalUri(imageSource);
 
     // Copy deal text to clipboard so it is always ready to paste in Facebook/Instagram
@@ -129,6 +156,7 @@ export async function shareToSocialPlatform(
   const shareMessage = `Check out this special offer on CityDeals!\n\n${dealHeading}\n${dealDescription}\n\nGet the coupon: ${dealUrl}`;
 
   try {
+    await trackCouponShare(options, platform);
     const localUri = await resolveImageLocalUri(imageSource);
 
     if (platform === "facebook") {

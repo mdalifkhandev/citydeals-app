@@ -37,6 +37,26 @@ export const authApi = {
     return data?.data || data;
   },
 
+  uploadAvatar: async (uri: string): Promise<User> => {
+    const filename = uri.split("/").pop() || "avatar.jpg";
+    const extension = filename.split(".").pop()?.toLowerCase() || "jpg";
+    const type = extension === "png" ? "image/png" : extension === "webp" ? "image/webp" : "image/jpeg";
+
+    const formData = new FormData();
+    formData.append("file", {
+      uri,
+      name: filename,
+      type,
+    } as any);
+
+    const { data } = await apiClient.post<any>(ENDPOINTS.USERS.AVATAR, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return data?.data || data;
+  },
+
   updateLanguage: async (preferredLanguage: string): Promise<User> => {
     const { data } = await apiClient.patch<any>(ENDPOINTS.USERS.LANGUAGE, {
       preferredLanguage,

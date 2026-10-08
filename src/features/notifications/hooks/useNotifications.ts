@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { notificationsApi } from "../services/notificationsApi";
+import { useAuthStore } from "../../auth/store/useAuthStore";
 
 export const NOTIFICATIONS_QUERY_KEY = ["notifications"] as const;
 
@@ -38,7 +39,8 @@ export const useUpdateNotificationSettings = () => {
   return useMutation({
     mutationFn: (notificationsPaused: boolean) =>
       notificationsApi.updateNotificationSettings({ notificationsPaused }),
-    onSuccess: () => {
+    onSuccess: (user) => {
+      useAuthStore.getState().updateUser(user);
       queryClient.invalidateQueries({ queryKey: ["currentUser"] });
     },
   });

@@ -1,6 +1,5 @@
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
-import Constants from "expo-constants";
 import { Platform } from "react-native";
 import { router } from "expo-router";
 
@@ -19,7 +18,8 @@ let cachedPushToken: string | null = null;
 let isPushConfiguredOnDevice = true;
 
 /**
- * Register for push notifications and return the Expo push token
+ * Register for push notifications and return the native device push token.
+ * On Android this is the FCM token. On iOS this is the APNs token.
  */
 export async function registerForPushNotificationsAsync(): Promise<
   string | null
@@ -75,28 +75,20 @@ export async function registerForPushNotificationsAsync(): Promise<
   }
 
   try {
-    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-    if (!projectId) {
-      // In bare workflow / dev client without EAS project configured, Expo Push Tokens require an EAS projectId
-      isPushConfiguredOnDevice = false;
-      console.log("[PUSH] EAS 'projectId' not configured in app config. Push token registration skipped for this session.");
-      return null;
-    }
-
-    const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
-    console.log("[PUSH] Expo push token:", tokenData.data);
-    cachedPushToken = tokenData.data;
-    return tokenData.data;
+    const tokenData = await Notifications.getDevicePushTokenAsync();
+    const token = String(tokenData.data);
+    console.log("[PUSH] Native device push token:", token);
+    cachedPushToken = token;
+    return token;
   } catch (error: any) {
     const errorMessage = error?.message || String(error);
     if (
       errorMessage.includes("Firebase") ||
-      errorMessage.includes("googleServicesFile") ||
-      errorMessage.includes("projectId")
+      errorMessage.includes("googleServicesFile")
     ) {
       isPushConfiguredOnDevice = false;
       console.warn(
-        "[PUSH] Push notifications (FCM/EAS) are not fully configured yet. Push token registration will be skipped for this session."
+        "[PUSH] Push notifications (FCM/APNs) are not fully configured yet. Push token registration will be skipped for this session."
       );
     } else {
       console.warn("[PUSH] Failed to get push token:", errorMessage);
