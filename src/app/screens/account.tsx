@@ -18,12 +18,21 @@ import { useQueryClient } from "@tanstack/react-query";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
-import * as ImagePicker from "expo-image-picker";
 import CurvedHeader from "../../components/CurvedHeader";
 import PrimaryButton from "../../components/PrimaryButton";
 import { useAuthStore } from "../../features/auth/store/useAuthStore";
 import { authApi } from "../../features/auth/services/authApi";
 import { useTranslation } from "react-i18next";
+
+function getSafeImagePicker() {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require("expo-image-picker");
+  } catch (err) {
+    console.warn("Native ExponentImagePicker module not found in this build:", err);
+    return null;
+  }
+}
 
 export default function AccountSettingScreen() {
   const { t } = useTranslation();
@@ -71,6 +80,12 @@ export default function AccountSettingScreen() {
 
   const handlePhotoTap = async () => {
     try {
+      const ImagePicker = getSafeImagePicker();
+      if (!ImagePicker || !ImagePicker.requestMediaLibraryPermissionsAsync) {
+        toast.error("Photo picker requires rebuilding the app binary (run 'npx expo run:android').");
+        return;
+      }
+
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
         toast.error("Photo permission is required to update your profile picture.");
