@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ImageSourcePropType,
   Text,
@@ -8,6 +8,9 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import PrimaryButton from "./PrimaryButton";
+import { useTranslation } from "react-i18next";
+
+import { useAuthStore } from "../features/auth/store/useAuthStore";
 
 export interface DealItem {
   id: string;
@@ -16,12 +19,14 @@ export interface DealItem {
   dealHeading: string;
   dealDescription: string;
   isFavorite?: boolean;
+  distance?: string;
+  merchantName?: string;
 }
 
 interface DealCardProps {
   deal: DealItem;
   onPressOpen?: (deal: DealItem) => void;
-  onToggleFavorite?: (deal: DealItem) => void;
+  onToggleFavorite?: (deal: DealItem, currentFavorite?: boolean) => void;
 }
 
 export default function DealCard({
@@ -29,12 +34,22 @@ export default function DealCard({
   onPressOpen,
   onToggleFavorite,
 }: DealCardProps) {
+  const { t } = useTranslation();
   const [favorite, setFavorite] = useState(deal.isFavorite ?? false);
 
+  useEffect(() => {
+    setFavorite(deal.isFavorite ?? false);
+  }, [deal.isFavorite]);
+
   const handleFavoriteToggle = () => {
-    const newState = !favorite;
-    setFavorite(newState);
-    onToggleFavorite?.({ ...deal, isFavorite: newState });
+    const isAuth = useAuthStore.getState().isAuthenticated;
+    if (!isAuth) {
+      onToggleFavorite?.(deal, favorite);
+      return;
+    }
+    const currentFav = favorite;
+    setFavorite(!currentFav);
+    onToggleFavorite?.(deal, currentFav);
   };
 
   const imageSource =
@@ -43,14 +58,14 @@ export default function DealCard({
       : deal.image || require("../../assets/images/placeholder-deal.jpg");
 
   return (
-    <View className="bg-white rounded-[26px] p-4 mb-5 border border-neutral-100 shadow-sm">
+    <View className="bg-white rounded-[26px] p-4 mb-5 border border-neutral-100">
       {/* Banner Container */}
       <View className="rounded-2xl overflow-hidden bg-neutral-100 relative">
         {/* Favorite Heart Button */}
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={handleFavoriteToggle}
-          className="absolute top-3 right-3 w-10 h-10 rounded-2xl bg-white items-center justify-center z-20 shadow-md"
+          className="absolute top-3 right-3 w-10 h-10 rounded-2xl bg-white items-center justify-center z-20 border border-neutral-100"
         >
           <Ionicons
             name={favorite ? "heart" : "heart-outline"}
@@ -58,6 +73,38 @@ export default function DealCard({
             color={favorite ? "#ef4444" : "#1e293b"}
           />
         </TouchableOpacity>
+
+        {/* Distance Badge */}
+        {deal.distance ? (
+          <View
+            style={{
+              position: "absolute",
+              top: 12,
+              left: 12,
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: "rgba(15, 23, 42, 0.8)",
+              paddingHorizontal: 10,
+              paddingVertical: 5,
+              borderRadius: 20,
+              zIndex: 20,
+              borderWidth: 1,
+              borderColor: "rgba(255, 255, 255, 0.2)",
+            }}
+          >
+            <Ionicons name="navigate-sharp" size={12} color="#ea580c" />
+            <Text
+              style={{
+                color: "#ffffff",
+                fontSize: 12,
+                fontWeight: "700",
+                marginLeft: 4,
+              }}
+            >
+              {deal.distance}
+            </Text>
+          </View>
+        ) : null}
 
         {/* Poster Image */}
         <Image
@@ -70,6 +117,21 @@ export default function DealCard({
 
       {/* Card Info Details */}
       <View className="pt-3.5 pb-1 px-1">
+        {deal.merchantName ? (
+          <Text
+            style={{
+              color: "#ea580c",
+              fontSize: 12,
+              fontWeight: "700",
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
+              marginBottom: 4,
+            }}
+            numberOfLines={1}
+          >
+            {deal.merchantName}
+          </Text>
+        ) : null}
         <Text className="text-neutral-900 font-bold text-lg">
           {deal.dealHeading}
         </Text>
@@ -80,7 +142,7 @@ export default function DealCard({
 
       {/* Action CTA Button */}
       <PrimaryButton
-        title="Open"
+        title={t("common.open", "Open")}
         onPress={() => onPressOpen?.(deal)}
         className="mt-3.5"
       />

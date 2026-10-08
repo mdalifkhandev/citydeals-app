@@ -5,18 +5,59 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { router } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import PrimaryButton from "../components/PrimaryButton";
 import { LANGUAGES } from "../config/constants";
+import { useAuthStore } from "../features/auth/store/useAuthStore";
+import { useShallow } from "zustand/react/shallow";
+import { changeAppLanguage } from "../locales";
+import { useTranslation } from "react-i18next";
 
 export default function LanguageSelectionScreen() {
-  const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const { t, i18n } = useTranslation();
+  const { isAuthenticated, user, isHydrated, onboardingCompleted } =
+    useAuthStore(
+      useShallow((state) => ({
+        isAuthenticated: state.isAuthenticated,
+        user: state.user,
+        isHydrated: state.isHydrated,
+        onboardingCompleted: state.onboardingCompleted,
+      }))
+    );
 
-  const handleContinue = () => {
+  const [selectedLanguage, setSelectedLanguage] = useState(i18n.language || "en");
+
+  // 1. Wait for persisted storage to load before deciding route
+  if (!isHydrated) {
+    return (
+      <View className="flex-1 bg-white items-center justify-center">
+        <ActivityIndicator size="large" color="#ea580c" />
+      </View>
+    );
+  }
+
+  // 2. If already logged in: bypass language & onboarding, jump straight into (tabs)
+  if (isAuthenticated && user) {
+    return <Redirect href="/(tabs)" />;
+  }
+
+  // 3. If onboarding was already completed before, direct to login
+  if (onboardingCompleted) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
+  const handleSelectLanguage = async (code: string) => {
+    setSelectedLanguage(code);
+    await changeAppLanguage(code);
+  };
+
+  const handleContinue = async () => {
+    await changeAppLanguage(selectedLanguage);
     router.push("/onboarding" as any);
   };
 
@@ -55,11 +96,10 @@ export default function LanguageSelectionScreen() {
               />
             </View>
             <Text className="text-2xl font-extrabold text-neutral-900 text-center tracking-tight">
-              Choose Your Language
+              {t("language.choose_title")}
             </Text>
             <Text className="text-neutral-500 text-base text-center mt-2 max-w-xs leading-6">
-              Please select your preferred language to continue exploring local
-              deals and offers.
+              {t("language.choose_desc")}
             </Text>
           </View>
 
@@ -71,7 +111,7 @@ export default function LanguageSelectionScreen() {
                 <TouchableOpacity
                   key={lang.id}
                   activeOpacity={0.8}
-                  onPress={() => setSelectedLanguage(lang.id)}
+                  onPress={() => handleSelectLanguage(lang.id)}
                   className={`flex-row items-center justify-between px-5 h-16 rounded-2xl border ${
                     isSelected
                       ? "bg-orange-50 border-orange-500"
@@ -122,7 +162,7 @@ export default function LanguageSelectionScreen() {
         {/* Action CTA Button */}
         <View className="pt-6">
           <PrimaryButton
-            title="Continue"
+            title={t("common.continue")}
             onPress={handleContinue}
           />
         </View>

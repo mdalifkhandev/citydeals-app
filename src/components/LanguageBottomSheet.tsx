@@ -1,8 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import AppBottomSheet from "./AppBottomSheet";
 import PrimaryButton from "./PrimaryButton";
+import { changeAppLanguage } from "../locales";
+import { useAuthStore } from "../features/auth/store/useAuthStore";
+import { authApi } from "../features/auth/services/authApi";
 
 export const LANGUAGES = [
   { id: "en", label: "English", flag: "🇺🇸", nativeName: "English (US)" },
@@ -14,7 +18,7 @@ interface LanguageBottomSheetProps {
   isPresented: boolean;
   onDismiss: () => void;
   selectedLanguage: string;
-  onSaveLanguage: (language: string) => void;
+  onSaveLanguage?: (language: string) => void;
 }
 
 export default function LanguageBottomSheet({
@@ -23,34 +27,61 @@ export default function LanguageBottomSheet({
   selectedLanguage,
   onSaveLanguage,
 }: LanguageBottomSheetProps) {
-  const [tempLanguage, setTempLanguage] = useState(selectedLanguage);
+  const { t, i18n } = useTranslation();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  // Normalize selected language to code ("en", "es", "pt")
+  const resolveCode = (val: string) => {
+    if (val === "Spanish" || val === "es") return "es";
+    if (val === "Brazilian" || val === "pt") return "pt";
+    return "en";
+  };
+
+  const [tempLanguageCode, setTempLanguageCode] = useState(
+    resolveCode(selectedLanguage || i18n.language)
+  );
 
   useEffect(() => {
     if (isPresented) {
-      setTempLanguage(selectedLanguage);
+      setTempLanguageCode(resolveCode(selectedLanguage || i18n.language));
     }
-  }, [isPresented, selectedLanguage]);
+  }, [isPresented, selectedLanguage, i18n.language]);
 
-  const handleSave = () => {
-    onSaveLanguage(tempLanguage);
+  const handleSave = async () => {
+    // 1. Change language in i18next & AsyncStorage
+    await changeAppLanguage(tempLanguageCode);
+
+    // 2. Sync to backend if logged in
+    if (isAuthenticated) {
+      authApi.updateLanguage(tempLanguageCode).catch((err) => {
+        console.warn("Failed to sync language to backend:", err);
+      });
+    }
+
+    // 3. Callback
+    if (onSaveLanguage) {
+      const selected = LANGUAGES.find((l) => l.id === tempLanguageCode);
+      onSaveLanguage(selected?.label || "English");
+    }
+
     onDismiss();
   };
 
   return (
     <AppBottomSheet isPresented={isPresented} onDismiss={onDismiss}>
       <Text className="text-neutral-900 font-extrabold text-xl text-center mt-1 mb-5">
-        Choose Your Language
+        {t("language.choose_title")}
       </Text>
 
       {/* Language Options */}
       <View className="gap-y-3 w-full">
         {LANGUAGES.map((lang) => {
-          const isSelected = tempLanguage === lang.label;
+          const isSelected = tempLanguageCode === lang.id;
           return (
             <TouchableOpacity
               key={lang.id}
               activeOpacity={0.8}
-              onPress={() => setTempLanguage(lang.label)}
+              onPress={() => setTempLanguageCode(lang.id)}
               className={`w-full h-16 rounded-2xl flex-row items-center justify-between px-4 border ${
                 isSelected
                   ? "bg-orange-50 border-orange-500"
@@ -99,7 +130,7 @@ export default function LanguageBottomSheet({
 
       {/* Save CTA Button */}
       <PrimaryButton
-        title="Save Language"
+        title={t("language.save_language")}
         onPress={handleSave}
         className="mt-6"
       />

@@ -14,8 +14,11 @@ import { StatusBar } from "expo-status-bar";
 import { router } from "expo-router";
 import PrimaryButton from "../components/PrimaryButton";
 import { ONBOARDING_DATA, OnboardingSlide } from "../config/constants";
+import { useAuthStore } from "../features/auth/store/useAuthStore";
+import { useTranslation } from "react-i18next";
 
 export default function OnboardingScreen() {
+  const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList<OnboardingSlide>>(null);
@@ -35,15 +38,39 @@ export default function OnboardingScreen() {
         animated: true,
       });
     } else {
+      useAuthStore.getState().setOnboardingCompleted(true);
       router.push("/register" as any);
     }
   };
 
   const handleSkip = () => {
+    useAuthStore.getState().setOnboardingCompleted(true);
     router.push("/register" as any);
   };
 
   const isLastSlide = currentIndex === ONBOARDING_DATA.length - 1;
+
+  const getSlideContent = (item: OnboardingSlide) => {
+    if (item.id === "1") {
+      return {
+        badge: t("onboarding.slide1_badge", item.badge),
+        title: t("onboarding.slide1_title", item.title),
+        desc: t("onboarding.slide1_desc", item.description),
+      };
+    }
+    if (item.id === "2") {
+      return {
+        badge: t("onboarding.slide2_badge", item.badge),
+        title: t("onboarding.slide2_title", item.title),
+        desc: t("onboarding.slide2_desc", item.description),
+      };
+    }
+    return {
+      badge: t("onboarding.slide3_badge", item.badge),
+      title: t("onboarding.slide3_title", item.title),
+      desc: t("onboarding.slide3_desc", item.description),
+    };
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-50 justify-between">
@@ -63,7 +90,7 @@ export default function OnboardingScreen() {
             onPress={handleSkip}
             className="px-4 py-2 rounded-full bg-neutral-100/90 active:bg-neutral-200"
           >
-            <Text className="text-neutral-700 font-bold text-base">Skip</Text>
+            <Text className="text-neutral-700 font-bold text-base">{t("onboarding.skip", "Skip")}</Text>
           </TouchableOpacity>
         ) : (
           <View className="w-12" />
@@ -80,39 +107,42 @@ export default function OnboardingScreen() {
         bounces={false}
         onMomentumScrollEnd={handleScroll}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View
-            style={{ width }}
-            className="flex-1 items-center justify-center px-6"
-          >
-            {/* Image Illustration with Soft Ambient Glow */}
-            <View className="items-center justify-center relative my-4 w-full">
-              <View className="absolute w-64 h-64 rounded-full bg-orange-100/60 blur-2xl" />
-              <Image
-                source={item.image}
-                className="w-72 h-64"
-                resizeMode="contain"
-              />
-            </View>
-
-            {/* Content Details */}
-            <View className="items-center mt-6 max-w-md px-2">
-              <View className="bg-orange-50 border border-orange-200/60 px-4 py-1.5 rounded-full mb-3.5">
-                <Text className="text-orange-600 text-base font-bold uppercase tracking-wider">
-                  {item.badge}
-                </Text>
+        renderItem={({ item }) => {
+          const content = getSlideContent(item);
+          return (
+            <View
+              style={{ width }}
+              className="flex-1 items-center justify-center px-6"
+            >
+              {/* Image Illustration with Soft Ambient Glow */}
+              <View className="items-center justify-center relative my-4 w-full">
+                <View className="absolute w-64 h-64 rounded-full bg-orange-100/60 blur-2xl" />
+                <Image
+                  source={item.image}
+                  className="w-72 h-64"
+                  resizeMode="contain"
+                />
               </View>
 
-              <Text className="text-2xl font-extrabold text-neutral-900 text-center tracking-tight leading-tight">
-                {item.title}
-              </Text>
+              {/* Content Details */}
+              <View className="items-center mt-6 max-w-md px-2">
+                <View className="bg-orange-50 border border-orange-200/60 px-4 py-1.5 rounded-full mb-3.5">
+                  <Text className="text-orange-600 text-base font-bold uppercase tracking-wider">
+                    {content.badge}
+                  </Text>
+                </View>
 
-              <Text className="text-neutral-600 text-center text-base leading-6 mt-3 font-normal">
-                {item.description}
-              </Text>
+                <Text className="text-2xl font-extrabold text-neutral-900 text-center tracking-tight leading-tight">
+                  {content.title}
+                </Text>
+
+                <Text className="text-neutral-600 text-center text-base leading-6 mt-3 font-normal">
+                  {content.desc}
+                </Text>
+              </View>
             </View>
-          </View>
-        )}
+          );
+        }}
       />
 
       {/* Bottom Controls (Pagination Dots + Action Button) */}
@@ -141,7 +171,7 @@ export default function OnboardingScreen() {
 
         {/* Primary CTA Button */}
         <PrimaryButton
-          title={isLastSlide ? "Get Started" : "Next"}
+          title={isLastSlide ? t("onboarding.get_started", "Get Started") : t("onboarding.next", "Next")}
           onPress={handleNext}
         />
       </View>

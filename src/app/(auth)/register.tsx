@@ -1,7 +1,7 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Image,
   KeyboardAvoidingView,
@@ -14,9 +14,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PrimaryButton from "../../components/PrimaryButton";
+import LanguageBottomSheet, { LANGUAGES } from "../../components/LanguageBottomSheet";
 import { useAuthMutations } from "../../features/auth/hooks/useAuthMutations";
+import { useTranslation } from "react-i18next";
 
 export default function RegisterScreen() {
+  const { t, i18n } = useTranslation();
   const { signupMutation } = useAuthMutations();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -27,14 +30,20 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [isLanguageSheetOpen, setIsLanguageSheetOpen] = useState(false);
+
+  const currentLang = useMemo(() => {
+    const code = (i18n.language || "en").slice(0, 2);
+    return LANGUAGES.find((l) => l.id === code) || LANGUAGES[0];
+  }, [i18n.language]);
 
   const handleCreateAccount = () => {
     if (!agreeTerms) {
-      alert("Please agree to the Terms & Conditions to proceed.");
+      alert(t("auth.agree_terms_required", "Please agree to the Terms & Conditions to proceed."));
       return;
     }
     if (password !== confirmPassword) {
-      alert("Passwords do not match.");
+      alert(t("auth.passwords_dont_match", "Passwords do not match."));
       return;
     }
     if (!fullName || !email || !password) return;
@@ -66,6 +75,21 @@ export default function RegisterScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Top Bar with Language Selector */}
+          <View className="flex-row justify-end items-center mb-1">
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setIsLanguageSheetOpen(true)}
+              className="flex-row items-center bg-neutral-100 rounded-full px-3 py-1.5 border border-neutral-200"
+            >
+              <Text className="mr-1.5 text-base">{currentLang.flag}</Text>
+              <Text className="text-neutral-700 font-semibold text-xs mr-1">
+                {currentLang.label}
+              </Text>
+              <Feather name="chevron-down" size={13} color="#64748b" />
+            </TouchableOpacity>
+          </View>
+
           {/* Centered Logo */}
           <View className="items-center mt-1 mb-2">
             <Image
@@ -78,11 +102,10 @@ export default function RegisterScreen() {
           {/* Heading */}
           <View className="items-center mb-4">
             <Text className="text-lg font-bold text-neutral-900 tracking-tight">
-              Create Account
+              {t("auth.register_title")}
             </Text>
             <Text className="text-neutral-500 text-base text-center mt-1 max-w-xs">
-              Let's get started! Please fill in the details below to create your
-              account.
+              {t("auth.register_subtitle")}
             </Text>
           </View>
 
@@ -91,14 +114,14 @@ export default function RegisterScreen() {
             {/* Full Name */}
             <View>
               <Text className="text-neutral-700 text-base font-semibold mb-1">
-                Full Name
+                {t("auth.full_name", "Full Name")}
               </Text>
               <View className="flex-row items-center border border-neutral-200 rounded-xl px-3.5 h-12 bg-white focus:border-orange-500">
                 <Feather name="user" size={18} color="#ea580c" />
                 <TextInput
                   value={fullName}
                   onChangeText={setFullName}
-                  placeholder="Enter your full name"
+                  placeholder={t("auth.enter_full_name", "Enter your full name")}
                   placeholderTextColor="#9ca3af"
                   className="flex-1 ml-2.5 text-neutral-900 text-base py-0"
                 />
@@ -108,14 +131,14 @@ export default function RegisterScreen() {
             {/* Email Address */}
             <View>
               <Text className="text-neutral-700 text-base font-semibold mb-1">
-                Email Address
+                {t("auth.email", "Email Address")}
               </Text>
               <View className="flex-row items-center border border-neutral-200 rounded-xl px-3.5 h-12 bg-white focus:border-orange-500">
                 <Feather name="mail" size={18} color="#ea580c" />
                 <TextInput
                   value={email}
                   onChangeText={setEmail}
-                  placeholder="Enter your email address"
+                  placeholder={t("auth.enter_email", "Enter your email address")}
                   placeholderTextColor="#9ca3af"
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -127,14 +150,14 @@ export default function RegisterScreen() {
             {/* Phone Number */}
             <View>
               <Text className="text-neutral-700 text-base font-semibold mb-1">
-                Phone Number
+                {t("auth.phone", "Phone Number")}
               </Text>
               <View className="flex-row items-center border border-neutral-200 rounded-xl px-3.5 h-12 bg-white focus:border-orange-500">
                 <Feather name="phone" size={18} color="#ea580c" />
                 <TextInput
                   value={phone}
                   onChangeText={setPhone}
-                  placeholder="Enter phone number"
+                  placeholder={t("auth.enter_phone", "Enter phone number")}
                   placeholderTextColor="#9ca3af"
                   keyboardType="phone-pad"
                   className="flex-1 ml-2.5 text-neutral-900 text-base py-0"
@@ -145,14 +168,14 @@ export default function RegisterScreen() {
             {/* Password */}
             <View>
               <Text className="text-neutral-700 text-base font-semibold mb-1">
-                Password
+                {t("auth.password", "Password")}
               </Text>
               <View className="flex-row items-center border border-neutral-200 rounded-xl px-3.5 h-12 bg-white focus:border-orange-500">
                 <Feather name="lock" size={18} color="#ea580c" />
                 <TextInput
                   value={password}
                   onChangeText={setPassword}
-                  placeholder="Enter your password"
+                  placeholder={t("auth.enter_password", "Enter your password")}
                   placeholderTextColor="#9ca3af"
                   secureTextEntry={!showPassword}
                   className="flex-1 ml-2.5 text-neutral-900 text-base py-0"
@@ -174,14 +197,14 @@ export default function RegisterScreen() {
             {/* Confirm Password */}
             <View>
               <Text className="text-neutral-700 text-base font-semibold mb-1">
-                Confirm Password
+                {t("auth.confirm_password", "Confirm Password")}
               </Text>
               <View className="flex-row items-center border border-neutral-200 rounded-xl px-3.5 h-12 bg-white focus:border-orange-500">
                 <Feather name="lock" size={18} color="#ea580c" />
                 <TextInput
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
-                  placeholder="Confirm your password"
+                  placeholder={t("auth.enter_confirm_password", "Confirm your password")}
                   placeholderTextColor="#9ca3af"
                   secureTextEntry={!showConfirmPassword}
                   className="flex-1 ml-2.5 text-neutral-900 text-base py-0"
@@ -205,6 +228,7 @@ export default function RegisterScreen() {
               activeOpacity={0.8}
               onPress={() => setAgreeTerms(!agreeTerms)}
               className="flex-row items-center mt-0.5"
+              id="agree-terms-checkbox"
             >
               <View
                 className={`w-5 h-5 rounded items-center justify-center border ${
@@ -218,16 +242,16 @@ export default function RegisterScreen() {
                 )}
               </View>
               <Text className="text-neutral-700 text-base ml-2">
-                I agree to the{" "}
+                {t("auth.agree_terms", "I agree to the")}{" "}
                 <Text className="text-orange-600 font-semibold">
-                  Terms & Conditions
+                  {t("auth.terms_conditions", "Terms & Conditions")}
                 </Text>
               </Text>
             </TouchableOpacity>
 
             {/* Create Account CTA */}
             <PrimaryButton
-              title="Create Account"
+              title={t("auth.register_title", "Create Account")}
               onPress={handleCreateAccount}
               loading={signupMutation.isPending}
               className="mt-1"
@@ -237,7 +261,7 @@ export default function RegisterScreen() {
             <View className="flex-row items-center my-1">
               <View className="flex-1 h-[1px] bg-neutral-200" />
               <Text className="px-3 text-neutral-400 text-base font-medium">
-                or
+                {t("common.or", "or")}
               </Text>
               <View className="flex-1 h-[1px] bg-neutral-200" />
             </View>
@@ -250,21 +274,21 @@ export default function RegisterScreen() {
             >
               <Ionicons name="logo-google" size={18} color="#EA4335" />
               <Text className="text-neutral-800 font-semibold text-base ml-2.5">
-                Continue with Google
+                {t("auth.continue_with_google", "Continue with Google")}
               </Text>
             </TouchableOpacity>
 
             {/* Footer Log In Link */}
             <View className="flex-row justify-center items-center mt-1">
               <Text className="text-neutral-500 text-base">
-                Already have an account?{" "}
+                {t("auth.already_have_account", "Already have an account?")}{" "}
               </Text>
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => router.push("/login" as any)}
               >
                 <Text className="text-orange-600 font-bold text-base">
-                  Log In
+                  {t("auth.sign_in", "Log In")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -276,12 +300,18 @@ export default function RegisterScreen() {
               className="items-center justify-center py-2 mt-1"
             >
               <Text className="text-neutral-500 font-semibold text-base underline">
-                Continue as Guest
+                {t("auth.continue_as_guest", "Continue as Guest")}
               </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <LanguageBottomSheet
+        isPresented={isLanguageSheetOpen}
+        onDismiss={() => setIsLanguageSheetOpen(false)}
+        selectedLanguage={i18n.language || "en"}
+      />
     </SafeAreaView>
   );
 }
