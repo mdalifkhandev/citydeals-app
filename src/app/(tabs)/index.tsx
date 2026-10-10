@@ -37,6 +37,40 @@ import { useTranslation } from "react-i18next";
 // Cast to any to bypass AnimatedProps typing bug with FlashListProps
 const AnimatedFlashList = OriginalAnimatedFlashList as any;
 
+function calculateDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+): number {
+  const R = 6371; // km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function formatDistance(distanceKm: number | null): string | undefined {
+  if (distanceKm === null || isNaN(distanceKm)) return undefined;
+  if (distanceKm < 1) {
+    const meters = Math.round(distanceKm * 1000);
+    return `${meters} m away`;
+  }
+  if (distanceKm < 10) {
+    return `${distanceKm.toFixed(1)} km away`;
+  }
+  if (distanceKm < 100) {
+    return `${distanceKm.toFixed(1)} km away`;
+  }
+  return `${Math.round(distanceKm)} km away`;
+}
+
 export default function HomeScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -68,7 +102,7 @@ export default function HomeScreen() {
   const { refetch: refetchUser } = useCurrentUser();
 
   // Request & get live device location on app launch + reverse geocode
-  const { locationName: gpsLocationName, refreshLocation } = useUserLocation();
+  const { coords, locationName: gpsLocationName, refreshLocation } = useUserLocation();
 
   const avatarUri = useMemo(() => {
     if (isLoggedIn && user?.profilePictureUrl) {
@@ -252,15 +286,29 @@ export default function HomeScreen() {
       return [];
     }
 
-    return serverCoupons.map((c) => ({
-      id: c.id,
-      category: c.category?.name || "General",
-      dealHeading: c.title,
-      dealDescription: c.description,
-      image: c.imageUrl || require("../../../assets/images/placeholder-deal.jpg"),
-      isFavorite: c.isSaved || savedSet.has(c.id),
-    }));
-  }, [serverCoupons, savedSet]);
+    const userLat = coords?.latitude;
+    const userLon = coords?.longitude;
+
+    return serverCoupons.map((c) => {
+      const rawLat = c.merchant?.latitude ?? c.area?.latitude;
+      const rawLon = c.merchant?.longitude ?? c.area?.longitude;
+
+      const distanceMeters =
+        rawLat && rawLon && userLat && userLon
+          ? calculateDistance(userLat, userLon, Number(rawLat), Number(rawLon)) * 1000
+          : null;
+
+      return {
+        id: c.id,
+        category: c.category?.name || "General",
+        dealHeading: c.title,
+        dealDescription: c.description,
+        image: c.imageUrl || require("../../../assets/images/placeholder-deal.jpg"),
+        isFavorite: c.isSaved || savedSet.has(c.id),
+        distance: formatDistance(distanceMeters ? distanceMeters / 1000 : null) || "",
+      };
+    });
+  }, [serverCoupons, savedSet, coords]);
 
   const handleOpenDeal = (deal: DealItem) => {
     router.push({
