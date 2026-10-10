@@ -26,6 +26,7 @@ import { Coupon } from "../../features/coupons/types";
 import {
   shareCouponWithSystemSheet,
   shareToSocialPlatform,
+  trackCouponShare,
 } from "../../utils/shareUtils";
 import { useTranslation } from "react-i18next";
 
@@ -261,6 +262,7 @@ function ensureHttps(url?: string | null): string | null {
         dealDescription,
         dealUrl,
         imageSource,
+        shareSlug: coupon?.shareSlug,
       },
       showToast
     );
@@ -268,6 +270,7 @@ function ensureHttps(url?: string | null): string | null {
 
   // Share via Email
   const handleShareEmail = () => {
+    trackCouponShare({ dealHeading, dealDescription, dealUrl, imageSource, shareSlug: coupon?.shareSlug }, "email");
     const subject = encodeURIComponent(`Exclusive Deal: ${dealHeading}`);
     const body = encodeURIComponent(
       `Check out this offer on CityDeals!\n\n${dealHeading}\n${dealDescription}\n\nGet the coupon: ${dealUrl}`
@@ -282,37 +285,37 @@ function ensureHttps(url?: string | null): string | null {
     const fbProfile = ensureHttps(coupon?.merchant?.facebookUrl);
     if (fbProfile) {
       Linking.openURL(fbProfile).catch(() => {
-        shareToSocialPlatform("facebook", { dealHeading, dealDescription, dealUrl, imageSource }, showToast);
+        shareToSocialPlatform("facebook", { dealHeading, dealDescription, dealUrl, imageSource, shareSlug: coupon?.shareSlug }, showToast);
       });
       return;
     }
-    await shareToSocialPlatform("facebook", { dealHeading, dealDescription, dealUrl, imageSource }, showToast);
+    await shareToSocialPlatform("facebook", { dealHeading, dealDescription, dealUrl, imageSource, shareSlug: coupon?.shareSlug }, showToast);
   };
 
   const handleShareInstagram = async () => {
     const igProfile = ensureHttps(coupon?.merchant?.instagramUrl);
     if (igProfile) {
       Linking.openURL(igProfile).catch(() => {
-        shareToSocialPlatform("instagram", { dealHeading, dealDescription, dealUrl, imageSource }, showToast);
+        shareToSocialPlatform("instagram", { dealHeading, dealDescription, dealUrl, imageSource, shareSlug: coupon?.shareSlug }, showToast);
       });
       return;
     }
-    await shareToSocialPlatform("instagram", { dealHeading, dealDescription, dealUrl, imageSource }, showToast);
+    await shareToSocialPlatform("instagram", { dealHeading, dealDescription, dealUrl, imageSource, shareSlug: coupon?.shareSlug }, showToast);
   };
 
   const handleShareTikTok = async () => {
     const ttProfile = ensureHttps(coupon?.merchant?.tiktokUrl);
     if (ttProfile) {
       Linking.openURL(ttProfile).catch(() => {
-        shareToSocialPlatform("tiktok", { dealHeading, dealDescription, dealUrl, imageSource }, showToast);
+        shareToSocialPlatform("tiktok", { dealHeading, dealDescription, dealUrl, imageSource, shareSlug: coupon?.shareSlug }, showToast);
       });
       return;
     }
-    await shareToSocialPlatform("tiktok", { dealHeading, dealDescription, dealUrl, imageSource }, showToast);
+    await shareToSocialPlatform("tiktok", { dealHeading, dealDescription, dealUrl, imageSource, shareSlug: coupon?.shareSlug }, showToast);
   };
 
   const handleShareSMS = async () => {
-    await shareToSocialPlatform("sms", { dealHeading, dealDescription, dealUrl, imageSource }, showToast);
+    await shareToSocialPlatform("sms", { dealHeading, dealDescription, dealUrl, imageSource, shareSlug: coupon?.shareSlug }, showToast);
   };
 
   const headerHeight = insets.top + 12 + 44 + 16;

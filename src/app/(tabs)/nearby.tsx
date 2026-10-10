@@ -32,9 +32,9 @@ function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): 
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -82,7 +82,7 @@ export default function NearbyScreen() {
   const [selectedRadius, setSelectedRadius] = useState("All Nearby");
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const radiusFilters = ["< 1 km", "< 2 km", "< 5 km", "All Nearby"];
+  const radiusFilters = ["1 km", "2 km", "5 km", "All Nearby"];
 
   const savedSet = useMemo(() => {
     if (!isLoggedIn || !savedCoupons) return new Set<string>();
@@ -127,34 +127,42 @@ export default function NearbyScreen() {
   }, [serverCoupons, coords, savedSet]);
 
   const radiusCounts = useMemo<Record<string, number>>(() => {
+    const dealsWithDistance = processedDeals.filter(
+      (d) => d.distanceKm !== null && Number.isFinite(d.distanceKm)
+    );
+
     if (!coords) {
       return {
-        "< 1 km": 0,
-        "< 2 km": 0,
-        "< 5 km": 0,
+        "1 km": 0,
+        "2 km": 0,
+        "5 km": 0,
         "All Nearby": processedDeals.length,
       };
     }
     return {
-      "< 1 km": processedDeals.filter((d) => d.distanceKm !== null && d.distanceKm <= 1).length,
-      "< 2 km": processedDeals.filter((d) => d.distanceKm !== null && d.distanceKm <= 2).length,
-      "< 5 km": processedDeals.filter((d) => d.distanceKm !== null && d.distanceKm <= 5).length,
+      // Strict "within": < threshold, NOT <=
+      // e.g. 1.9 km → counts for "2 km" ✅, NOT for "1 km" ✅
+      // e.g. 3.5 km → does NOT count for "2 km" ✅
+      "1 km": dealsWithDistance.filter((d) => d.distanceKm !== null && d.distanceKm < 1).length,
+      "2 km": dealsWithDistance.filter((d) => d.distanceKm !== null && d.distanceKm < 2).length,
+      "5 km": dealsWithDistance.filter((d) => d.distanceKm !== null && d.distanceKm < 5).length,
       "All Nearby": processedDeals.length,
     };
   }, [processedDeals, coords]);
 
+  // Threshold map — same values used in both count & filter
+  const RADIUS_KM: Record<string, number> = { "1 km": 1, "2 km": 2, "5 km": 5 };
+
   const filteredDeals = useMemo(() => {
     if (processedDeals.length === 0) return [];
 
-    let maxKm = Infinity;
-    if (selectedRadius === "< 1 km") maxKm = 1;
-    else if (selectedRadius === "< 2 km") maxKm = 2;
-    else if (selectedRadius === "< 5 km") maxKm = 5;
+    const maxKm = RADIUS_KM[selectedRadius] ?? Infinity;
 
     let list = processedDeals;
 
     if (coords && maxKm !== Infinity) {
-      list = list.filter((d) => d.distanceKm !== null && d.distanceKm <= maxKm);
+      // Strict < so count badge and list always match
+      list = list.filter((d) => d.distanceKm !== null && d.distanceKm < maxKm);
     }
 
     return [...list].sort((a, b) => {
@@ -228,13 +236,11 @@ export default function NearbyScreen() {
             <Text style={styles.headerSubtitle} numberOfLines={1}>
               {isCouponsLoading
                 ? "Locating offers near you..."
-                : `${filteredDeals.length} ${
-                    filteredDeals.length === 1 ? "offer" : "offers"
-                  } ${
-                    selectedRadius === "All Nearby"
-                      ? "near you"
-                      : `within ${selectedRadius}`
-                  }`}
+                : `${filteredDeals.length} ${filteredDeals.length === 1 ? "offer" : "offers"
+                } ${selectedRadius === "All Nearby"
+                  ? "near you"
+                  : `within ${selectedRadius}`
+                }`}
             </Text>
           </View>
 
@@ -274,7 +280,7 @@ export default function NearbyScreen() {
                     styles.radiusText,
                     isSelected ? styles.radiusTextActive : styles.radiusTextInactive,
                   ]}
-                >
+                >{`< `}
                   {radius === "All Nearby" ? t("nearby.all_nearby", "All Nearby") : radius}
                   {coords && count !== undefined ? ` (${count})` : ""}
                 </Text>

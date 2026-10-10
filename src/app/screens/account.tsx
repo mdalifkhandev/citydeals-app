@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -24,6 +24,16 @@ import { useAuthStore } from "../../features/auth/store/useAuthStore";
 import { authApi } from "../../features/auth/services/authApi";
 import { useTranslation } from "react-i18next";
 
+function getSafeImagePicker() {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require("expo-image-picker");
+  } catch (err) {
+    console.warn("Native ExponentImagePicker module not found in this build:", err);
+    return null;
+  }
+}
+
 export default function AccountSettingScreen() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -36,7 +46,14 @@ export default function AccountSettingScreen() {
     user?.dateOfBirth ? user.dateOfBirth.split("T")[0] : ""
   );
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+
+  useEffect(() => {
+    setFullName(user?.fullName || "");
+    setPhoneNumber(user?.phoneNumber || "");
+    setDateOfBirth(user?.dateOfBirth ? user.dateOfBirth.split("T")[0] : "");
+  }, [user?.dateOfBirth, user?.fullName, user?.phoneNumber]);
 
   const avatarUri =
     user?.profilePictureUrl ||
@@ -61,10 +78,41 @@ export default function AccountSettingScreen() {
     return new Date(2000, 0, 1);
   }, [dateOfBirth]);
 
-  const handlePhotoTap = () => {
-    toast.info(t("account.photo_title"), {
-      description: t("account.photo_info"),
-    });
+  const handlePhotoTap = async () => {
+    try {
+      const ImagePicker = getSafeImagePicker();
+      if (!ImagePicker || !ImagePicker.requestMediaLibraryPermissionsAsync) {
+        toast.error("Photo picker requires rebuilding the app binary (run 'npx expo run:android').");
+        return;
+      }
+
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        toast.error("Photo permission is required to update your profile picture.");
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.85,
+      });
+
+      if (result.canceled || !result.assets[0]?.uri) return;
+
+      setIsUploadingAvatar(true);
+      const updatedUser = await authApi.uploadAvatar(result.assets[0].uri);
+      useAuthStore.getState().updateUser(updatedUser);
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      toast.success("Profile photo updated");
+    } catch (err: any) {
+      const msg =
+        err.response?.data?.message || err.message || "Failed to update profile photo";
+      toast.error(Array.isArray(msg) ? msg[0] : msg);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
   };
 
   const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
@@ -158,10 +206,11 @@ export default function AccountSettingScreen() {
             <TouchableOpacity
               activeOpacity={0.7}
               onPress={handlePhotoTap}
+              disabled={isUploadingAvatar}
               className="mt-2.5"
             >
               <Text className="text-neutral-500 text-sm font-normal">
-                {t("account.tap_to_change_photo")}
+                {isUploadingAvatar ? "Uploading photo..." : t("account.tap_to_change_photo")}
               </Text>
             </TouchableOpacity>
           </View>
