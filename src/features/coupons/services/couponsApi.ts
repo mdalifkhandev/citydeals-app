@@ -28,6 +28,13 @@ export const couponsApi = {
     return data?.data || data;
   },
 
+  trackCouponView: async (couponId: string): Promise<any> => {
+    const { data } = await apiClient.post<any>(`/coupons/${couponId}/view`, {
+      source: "APP",
+    });
+    return data?.data || data;
+  },
+
   redeemCoupon: async (couponId: string): Promise<any> => {
     const { data } = await apiClient.post<any>(`/coupons/${couponId}/redeem`);
     return data?.data || data;

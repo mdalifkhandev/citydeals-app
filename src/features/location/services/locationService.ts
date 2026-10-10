@@ -141,6 +141,14 @@ export const locationService = {
         });
       }
 
+      // 7. Start background location tracking for nearby deals
+      try {
+        const { startBackgroundLocationTracking } = await import("./backgroundLocationTask");
+        await startBackgroundLocationTracking();
+      } catch (err) {
+        console.warn("Failed to start background tracking:", err);
+      }
+
       return { coords, locationName, addressDetails };
     } catch (err: any) {
       console.warn("Location error:", err);

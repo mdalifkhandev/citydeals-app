@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { toast } from "sonner-native";
 import PrimaryButton from "../../components/PrimaryButton";
 import LanguageBottomSheet, { LANGUAGES } from "../../components/LanguageBottomSheet";
 import { useAuthMutations } from "../../features/auth/hooks/useAuthMutations";
@@ -20,7 +21,7 @@ import { useTranslation } from "react-i18next";
 
 export default function RegisterScreen() {
   const { t, i18n } = useTranslation();
-  const { signupMutation } = useAuthMutations();
+  const { signupMutation, googleLoginMutation } = useAuthMutations();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -50,8 +51,27 @@ export default function RegisterScreen() {
     signupMutation.mutate({ fullName, email, password, phoneNumber: phone, acceptedTerms: agreeTerms });
   };
 
-  const handleGoogleSignIn = () => {
-    alert("Google Sign-In will be implemented soon.");
+  const handleGoogleSignIn = async () => {
+    try {
+      const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
+      GoogleSignin.configure({
+        webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '', // You must provide this in .env
+        offlineAccess: true,
+      });
+
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      const idToken = userInfo.data?.idToken;
+
+      if (idToken) {
+        googleLoginMutation.mutate(idToken);
+      } else {
+        toast.error("Google Sign-In Failed", { description: "Could not retrieve ID token." });
+      }
+    } catch (error: any) {
+      console.log('Google Sign-In Error:', error);
+      toast.error("Google Sign-In Failed", { description: error.message || "An error occurred during sign in." });
+    }
   };
 
   const handleContinueAsGuest = () => {

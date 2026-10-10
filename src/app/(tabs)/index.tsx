@@ -102,7 +102,7 @@ export default function HomeScreen() {
   const { refetch: refetchUser } = useCurrentUser();
 
   // Request & get live device location on app launch + reverse geocode
-  const { coords, locationName: gpsLocationName, refreshLocation } = useUserLocation();
+  const { coords, locationName: gpsLocationName, refreshLocation } = useUserLocation(false);
 
   const avatarUri = useMemo(() => {
     if (isLoggedIn && user?.profilePictureUrl) {

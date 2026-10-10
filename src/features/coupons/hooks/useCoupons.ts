@@ -9,10 +9,19 @@ export const COUPONS_QUERY_KEY = ["coupons"] as const;
 export const SAVED_COUPONS_QUERY_KEY = ["saved_coupons"] as const;
 export const REDEEMED_COUPONS_QUERY_KEY = ["redeemed_coupons"] as const;
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 export const useCoupons = (filters?: CouponFilterParams) => {
   return useQuery({
     queryKey: [...COUPONS_QUERY_KEY, filters],
-    queryFn: () => couponsApi.getCoupons(filters),
+    queryFn: async () => {
+      const data = await couponsApi.getCoupons(filters);
+      // Cache data for background location task
+      if (data && Array.isArray(data)) {
+        AsyncStorage.setItem('nearby_deals_cache', JSON.stringify(data.slice(0, 100))).catch(e => console.warn(e));
+      }
+      return data;
+    },
     staleTime: 1000 * 60 * 2, // 2 minutes cache
   });
 };

@@ -21,7 +21,7 @@ import { useTranslation } from "react-i18next";
 
 export default function LoginScreen() {
   const { t, i18n } = useTranslation();
-  const { loginMutation } = useAuthMutations();
+  const { loginMutation, googleLoginMutation } = useAuthMutations();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -73,8 +73,27 @@ export default function LoginScreen() {
     loginMutation.mutate({ email: trimmedEmail, password });
   };
 
-  const handleGoogleSignIn = () => {
-    alert("Google Sign-In will be implemented soon.");
+  const handleGoogleSignIn = async () => {
+    try {
+      const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
+      GoogleSignin.configure({
+        webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '', // You must provide this in .env
+        offlineAccess: true,
+      });
+
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      const idToken = userInfo.data?.idToken;
+
+      if (idToken) {
+        googleLoginMutation.mutate(idToken);
+      } else {
+        toast.error("Google Sign-In Failed", { description: "Could not retrieve ID token." });
+      }
+    } catch (error: any) {
+      console.log('Google Sign-In Error:', error);
+      toast.error("Google Sign-In Failed", { description: error.message || "An error occurred during sign in." });
+    }
   };
 
   const handleContinueAsGuest = () => {

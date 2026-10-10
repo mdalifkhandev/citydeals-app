@@ -13,6 +13,11 @@ export const authApi = {
     return data?.data || data;
   },
 
+  googleLogin: async (idToken: string): Promise<AuthResponse> => {
+    const { data } = await apiClient.post<any>('/auth/google', { idToken });
+    return data?.data || data;
+  },
+
   register: async (credentials: any): Promise<AuthResponse> => {
     const { data } = await apiClient.post<any>(ENDPOINTS.AUTH.REGISTER, credentials);
     return data?.data || data;

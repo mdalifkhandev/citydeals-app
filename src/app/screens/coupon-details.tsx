@@ -93,6 +93,13 @@ export default function CouponDetailsScreen() {
     };
   }, [dealId]);
 
+  useEffect(() => {
+    if (!dealId) return;
+    couponsApi.trackCouponView(dealId).catch((err) => {
+      console.warn("Could not track coupon view:", err);
+    });
+  }, [dealId]);
+
   // Derived Display Values
   const dealHeading = coupon?.title || params.dealHeading || "Exclusive Coupon Deal";
   const dealDescription = coupon?.description || params.dealDescription || "Show this coupon to get instant savings at checkout.";

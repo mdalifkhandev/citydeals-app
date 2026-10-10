@@ -11,6 +11,7 @@ export const ENDPOINTS = {
     RESET_PASSWORD: "/auth/reset-password",
     CHANGE_PASSWORD: "/auth/change-password",
     LOCATION_SYNC: "/auth/location/sync",
+    PUSH_TOKEN_SYNC: "/auth/push-token/sync",
   },
   USERS: {
     ME: "/me",

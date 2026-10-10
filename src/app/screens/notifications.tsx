@@ -13,6 +13,7 @@ import { router } from "expo-router";
 import CurvedHeader from "../../components/CurvedHeader";
 import { useNotifications, useMarkAsRead } from "../../features/notifications/hooks/useNotifications";
 import { Notification } from "../../features/notifications/types";
+import { navigateToNotificationSource } from "../../features/notifications/services/pushNotificationService";
 import { useAuthStore } from "../../features/auth/store/useAuthStore";
 import { useTranslation } from "react-i18next";
 
@@ -128,13 +129,7 @@ export default function NotificationsScreen() {
       markAsReadMutation.mutate(item.id);
     }
 
-    // Navigate if there's a coupon reference
-    if (item.data?.couponId) {
-      router.push({
-        pathname: "/screens/coupon-details" as any,
-        params: { id: item.data.couponId as string },
-      });
-    }
+    navigateToNotificationSource(item.data);
   };
 
   const handleLoadMore = () => {

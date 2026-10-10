@@ -1,7 +1,10 @@
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
+import Constants from "expo-constants";
 import { Platform } from "react-native";
 import { router } from "expo-router";
+import { apiClient } from "../../../api/client";
+import { ENDPOINTS } from "../../../api/endpoints";
 
 // Configure how notifications appear when the app is in the foreground
 Notifications.setNotificationHandler({
@@ -16,6 +19,15 @@ Notifications.setNotificationHandler({
 
 let cachedPushToken: string | null = null;
 let isPushConfiguredOnDevice = true;
+let lastHandledNotificationKey: string | null = null;
+
+function getExpoProjectId(): string | undefined {
+  return (
+    Constants.easConfig?.projectId ||
+    (Constants.expoConfig?.extra?.eas as { projectId?: string } | undefined)
+      ?.projectId
+  );
+}
 
 /**
  * Register for push notifications and return the native device push token.
@@ -75,9 +87,14 @@ export async function registerForPushNotificationsAsync(): Promise<
   }
 
   try {
-    const tokenData = await Notifications.getDevicePushTokenAsync();
+    const tokenData =
+      Platform.OS === "ios"
+        ? await Notifications.getExpoPushTokenAsync(
+            getExpoProjectId() ? { projectId: getExpoProjectId() } : undefined
+          )
+        : await Notifications.getDevicePushTokenAsync();
     const token = String(tokenData.data);
-    console.log("[PUSH] Native device push token:", token);
+    console.log("[PUSH] Device push token:", token);
     cachedPushToken = token;
     return token;
   } catch (error: any) {
@@ -97,6 +114,78 @@ export async function registerForPushNotificationsAsync(): Promise<
   }
 }
 
+export async function syncPushTokenWithBackend(): Promise<string | null> {
+  const token = await registerForPushNotificationsAsync();
+  if (!token) {
+    return null;
+  }
+
+  await apiClient.post(ENDPOINTS.AUTH.PUSH_TOKEN_SYNC, { fcmToken: token });
+  return token;
+}
+
+function asString(value: unknown): string | undefined {
+  if (typeof value === "string" && value.trim()) return value;
+  if (typeof value === "number") return String(value);
+  return undefined;
+}
+
+function isTruthy(value: unknown): boolean {
+  return value === true || value === "true" || value === "1" || value === 1;
+}
+
+export function navigateToNotificationSource(
+  data?: Record<string, unknown> | null
+) {
+  const couponId = asString(data?.couponId);
+  if (couponId) {
+    router.push({
+      pathname: "/screens/coupon-details" as any,
+      params: { id: couponId },
+    });
+    return;
+  }
+
+  const merchantId = asString(data?.merchantId);
+  const areaId = asString(data?.areaId);
+  const sourceType = asString(data?.sourceType);
+  const grouped = isTruthy(data?.grouped);
+  if (
+    merchantId ||
+    areaId ||
+    grouped ||
+    sourceType === "MERCHANT" ||
+    sourceType === "AREA" ||
+    sourceType === "NEARBY_DEALS"
+  ) {
+    router.push({
+      pathname: "/(tabs)/nearby" as any,
+      params: {
+        ...(merchantId ? { merchantId } : {}),
+        ...(areaId ? { areaId } : {}),
+        ...(grouped ? { source: "nearby-deals" } : {}),
+      },
+    });
+    return;
+  }
+
+  router.push("/screens/notifications" as any);
+}
+
+function handleNotificationResponse(response: Notifications.NotificationResponse) {
+  const notification = response.notification;
+  const data = notification.request.content.data as Record<string, unknown> | null;
+  const key =
+    notification.request.identifier ||
+    `${notification.date ?? ""}:${notification.request.content.title ?? ""}`;
+
+  if (key && key === lastHandledNotificationKey) return;
+  lastHandledNotificationKey = key;
+
+  console.log("[PUSH] Notification tapped, data:", data);
+  navigateToNotificationSource(data);
+}
+
 /**
  * Listen for incoming notifications (foreground) and taps (background / killed)
  */
@@ -109,21 +198,13 @@ export function setupNotificationListeners() {
 
   // When user taps on a notification
   const responseSubscription =
-    Notifications.addNotificationResponseReceivedListener((response) => {
-      const data = response.notification.request.content.data;
-      console.log("[PUSH] Notification tapped, data:", data);
+    Notifications.addNotificationResponseReceivedListener(handleNotificationResponse);
 
-      // Navigate based on notification data
-      if (data?.couponId) {
-        router.push({
-          pathname: "/screens/coupon-details" as any,
-          params: { id: data.couponId as string },
-        });
-      } else {
-        // Default: go to notifications screen
-        router.push("/screens/notifications" as any);
-      }
-    });
+  Notifications.getLastNotificationResponseAsync().then((response) => {
+    if (response) {
+      setTimeout(() => handleNotificationResponse(response), 250);
+    }
+  });
 
   return () => {
     receivedSubscription.remove();

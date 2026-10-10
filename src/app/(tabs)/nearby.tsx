@@ -64,7 +64,7 @@ export default function NearbyScreen() {
     locationName,
     isLoading: isLocationLoading,
     refreshLocation,
-  } = useUserLocation();
+  } = useUserLocation(false);
 
   const {
     data: serverCoupons = [],

@@ -7,6 +7,7 @@ import { I18nextProvider } from "react-i18next";
 import i18n from "../locales";
 import { useUserLocation } from "../features/location/hooks/useUserLocation";
 import { tokenService } from "../features/auth/services/tokenService";
+import { useAuthStore } from "../features/auth/store/useAuthStore";
 
 const queryClient = new QueryClient();
 
@@ -23,14 +24,32 @@ function AuthInitializer() {
 }
 
 function NotificationInitializer() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
   useEffect(() => {
+    let cleanupFn: (() => void) | undefined;
     import("../features/notifications/services/pushNotificationService").then(
       ({ setupNotificationListeners }) => {
-        const cleanup = setupNotificationListeners();
-        return cleanup;
+        cleanupFn = setupNotificationListeners();
       }
     );
+    return () => {
+      if (cleanupFn) cleanupFn();
+    };
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    import("../features/notifications/services/pushNotificationService").then(
+      ({ syncPushTokenWithBackend }) => {
+        syncPushTokenWithBackend().catch((error) => {
+          console.warn("[PUSH] Failed to sync push token:", error);
+        });
+      }
+    );
+  }, [isAuthenticated]);
+
   return null;
 }
 

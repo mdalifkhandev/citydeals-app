@@ -7,6 +7,7 @@ import { handleApiError } from "../../../utils/errorHandler";
 import { toast } from "sonner-native";
 import { locationService } from "../../location/services/locationService";
 import { useLocationStore } from "../../location/store/useLocationStore";
+import { syncPushTokenWithBackend } from "../../notifications/services/pushNotificationService";
 
 export const useAuthMutations = () => {
   const queryClient = useQueryClient();
@@ -17,6 +18,8 @@ export const useAuthMutations = () => {
     await tokenService.saveTokens(data.tokens);
     setSession(data.user);
     useAuthStore.getState().setOnboardingCompleted(true);
+
+    syncPushTokenWithBackend().catch(() => {});
 
     const coords = useLocationStore.getState().coords;
     if (coords) {
@@ -36,6 +39,17 @@ export const useAuthMutations = () => {
     },
     onError: (error) => {
       toast.error("Login Failed", { description: handleApiError(error) });
+    },
+  });
+
+  const googleLoginMutation = useMutation({
+    mutationFn: authApi.googleLogin,
+    onSuccess: (data) => {
+      handleSuccess(data, "/(tabs)");
+      toast.success("Welcome back!", { description: "Logged in with Google." });
+    },
+    onError: (error) => {
+      toast.error("Google Login Failed", { description: handleApiError(error) });
     },
   });
 
@@ -93,6 +107,7 @@ export const useAuthMutations = () => {
 
   return {
     loginMutation,
+    googleLoginMutation,
     adminLoginMutation,
     signupMutation,
     logoutMutation,

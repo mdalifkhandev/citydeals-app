@@ -2,6 +2,7 @@ import { Stack } from "expo-router";
 import AppProviders from "../providers/AppProviders";
 import "../global.css";
 import "../locales";
+import "../features/location/services/backgroundLocationTask";
 
 export default function RootLayout() {
   return (

@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { Redirect, router } from "expo-router";
+import { Redirect, router, useRootNavigationState } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import PrimaryButton from "../components/PrimaryButton";
 import { LANGUAGES } from "../config/constants";
@@ -30,10 +30,12 @@ export default function LanguageSelectionScreen() {
       }))
     );
 
+  const rootNavigationState = useRootNavigationState();
+
   const [selectedLanguage, setSelectedLanguage] = useState(i18n.language || "en");
 
-  // 1. Wait for persisted storage to load before deciding route
-  if (!isHydrated) {
+  // 1. Wait for persisted storage to load and navigation to be ready before deciding route
+  if (!isHydrated || !rootNavigationState?.key) {
     return (
       <View className="flex-1 bg-white items-center justify-center">
         <ActivityIndicator size="large" color="#ea580c" />
